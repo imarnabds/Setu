@@ -219,7 +219,7 @@ export const CommissionSelector: React.FC<CommissionSelectorProps> = ({
         </View>
 
         <Text style={styles.statutoryDisclaimer}>
-          ⚖️ SEBI Compliance Notice: IPO CONNECT does not handle or route investment funds. Applications are submitted directly via ASBA or broker portals. Advisory fees are governed solely by mutual consent.
+          ⚖️ SEBI Compliance Notice: Setu does not handle or route investment funds. Applications are submitted directly via ASBA or broker portals. Advisory fees are governed solely by mutual consent.
         </Text>
       </View>
 

@@ -1,7 +1,7 @@
 {
-  "name": "ipo-connect-backend",
+  "name": "setu-backend",
   "version": "1.0.0",
-  "description": "IPO CONNECT Backend - Two-Sided Investor Networking & IPO Assistance Platform",
+  "description": "Setu Backend - Two-Sided Investor Networking & IPO Assistance Platform",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",

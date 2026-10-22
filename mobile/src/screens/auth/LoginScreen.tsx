@@ -4,7 +4,8 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity
+  TouchableOpacity,
+  Image
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
@@ -71,7 +72,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       </TouchableOpacity>
 
       <View style={styles.header}>
-        <Text style={styles.title}>Sign In to IPO Connect</Text>
+        <Image
+          source={require('../../../assets/setu-logo.png')}
+          style={styles.logoImage}
+          resizeMode="cover"
+        />
+        <Text style={styles.title}>Sign In to Setu</Text>
         <Text style={styles.subtitle}>
           Access your investor or Demat account networking dashboard.
         </Text>
@@ -153,6 +159,13 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: spacing.xl
+  },
+  logoImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    marginBottom: spacing.sm,
+    ...shadows.sm
   },
   title: {
     fontSize: 26,

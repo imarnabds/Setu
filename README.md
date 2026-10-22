@@ -1,11 +1,11 @@
-# IPO CONNECT — Two-Sided Investor Networking & IPO Assistance Platform
+# Setu — Two-Sided Investor Networking & IPO Assistance Platform
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Backend](https://img.shields.io/badge/Backend-Node.js%20%7C%20Express%20%7C%20TypeScript-green)](backend)
 [![Frontend](https://img.shields.io/badge/Mobile-React%20Native%20%7C%20Expo%20SDK%2058-blue)](mobile)
 [![Realtime](https://img.shields.io/badge/Realtime-Socket.IO-black)](backend)
 
-**IPO CONNECT** is a production-oriented, two-sided mobile and web platform that connects individual retail investors with experienced Demat Account Holders through a controlled request-and-acceptance system called **Poke**.
+**Setu** is a production-oriented, two-sided mobile and web platform that connects individual retail investors with experienced Demat Account Holders through a controlled request-and-acceptance system called **Poke**.
 
 The application is built with a restrained, trustworthy fintech design language, end-to-end data persistence, real-time messaging, a strict commission configuration engine (0% to 50% in 2.5% increments), and full compliance safeguards in alignment with SEBI, broker, and UPI regulations.
 

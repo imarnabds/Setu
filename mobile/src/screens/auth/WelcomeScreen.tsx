@@ -4,7 +4,8 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity
+  TouchableOpacity,
+  Image
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
@@ -49,10 +50,12 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       {/* Brand Header */}
       <View style={styles.heroSection}>
-        <View style={styles.logoBadge}>
-          <Icon name="poke" size={36} color={colors.surface} />
-        </View>
-        <Text style={styles.productTitle}>IPO CONNECT</Text>
+        <Image
+          source={require('../../../assets/setu-logo.png')}
+          style={styles.logoImage}
+          resizeMode="cover"
+        />
+        <Text style={styles.productTitle}>Setu</Text>
         <Text style={styles.tagline}>Two-Sided Investor Networking & IPO Assistance</Text>
 
         <Text style={styles.heroDescription}>
@@ -153,7 +156,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
       {/* Legal & Footer links */}
       <View style={styles.footer}>
         <Text style={styles.footerLegal}>
-          By continuing, you agree to our Terms of Service & Privacy Policy. IPO CONNECT is an introduction and technical advisory networking platform.
+          By continuing, you agree to our Terms of Service & Privacy Policy. Setu is an introduction and technical advisory networking platform.
         </Text>
       </View>
     </ScrollView>
@@ -173,13 +176,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: spacing.lg
   },
-  logoBadge: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: colors.primaryActionBlue,
-    alignItems: 'center',
-    justifyContent: 'center',
+  logoImage: {
+    width: 76,
+    height: 76,
+    borderRadius: 22,
     marginBottom: spacing.md,
     ...shadows.md
   },

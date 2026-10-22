@@ -197,7 +197,7 @@ export const seedDatabase = async () => {
     avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&auto=format&fit=crop&q=80',
     city: 'Mumbai',
     region: 'Maharashtra',
-    bio: 'IPO CONNECT Official Compliance & Audit Administrator',
+    bio: 'Setu Official Compliance & Audit Administrator',
     supportedCategories: ['Platform Compliance', 'KYC Review', 'Security Audit'],
     defaultCommissionRate: 0,
     commissionBasis: 'Platform Administration',

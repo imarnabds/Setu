@@ -66,7 +66,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
             <View style={styles.greetingCol}>
               <Text style={styles.greetingText}>{getGreeting()}</Text>
               <Text style={styles.userName} numberOfLines={1}>
-                {user?.fullName || 'IPO Connect'}
+                {user?.fullName || 'Setu'}
               </Text>
             </View>
           </View>
@@ -116,7 +116,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Role & Experience Switcher</Text>
             <Text style={styles.modalDesc}>
-              Preview how IPO CONNECT functions across each user journey:
+              Preview how Setu functions across each user journey:
             </Text>
 
             <TouchableOpacity

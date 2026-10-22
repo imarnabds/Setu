@@ -188,7 +188,7 @@ export const InvestorHomeScreen: React.FC = () => {
           <Text style={styles.noticeTitle}>Responsible Platform Usage</Text>
         </View>
         <Text style={styles.noticeBody}>
-          IPO CONNECT connects investors with experienced Demat holders for lawful guidance and application strategies. Never share trading passwords, bank OTPs, or UPI PINs. Always execute bids through authorized exchange channels.
+          Setu connects investors with experienced Demat holders for lawful guidance and application strategies. Never share trading passwords, bank OTPs, or UPI PINs. Always execute bids through authorized exchange channels.
         </Text>
       </View>
     </ScrollView>

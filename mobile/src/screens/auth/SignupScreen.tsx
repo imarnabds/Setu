@@ -4,7 +4,8 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity
+  TouchableOpacity,
+  Image
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
@@ -84,7 +85,7 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({
       if (res.data.success) {
         const { user, accessToken, refreshToken } = res.data.data;
         setAuth(user, accessToken, refreshToken);
-        addToast(`Welcome to IPO CONNECT, ${user.fullName}!`, 'success');
+        addToast(`Welcome to Setu, ${user.fullName}!`, 'success');
       }
     } catch (err: any) {
       const msg = err.response?.data?.error || 'Registration failed. Please check your inputs.';
@@ -102,9 +103,14 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({
       </TouchableOpacity>
 
       <View style={styles.header}>
+        <Image
+          source={require('../../../assets/setu-logo.png')}
+          style={styles.logoImage}
+          resizeMode="cover"
+        />
         <Text style={styles.title}>Create Your Account</Text>
         <Text style={styles.subtitle}>
-          Join India's premier investor networking & IPO assistance platform.
+          Join Setu — India's premier investor networking & IPO assistance platform.
         </Text>
       </View>
 
@@ -265,6 +271,13 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: spacing.xl
+  },
+  logoImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    marginBottom: spacing.sm,
+    ...shadows.sm
   },
   title: {
     fontSize: 26,

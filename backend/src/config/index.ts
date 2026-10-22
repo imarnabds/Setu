@@ -10,7 +10,7 @@ export const config = {
   refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '7d',
   mongodbUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/ipo_connect',
   corsOrigin: process.env.CORS_ORIGIN || '*',
-  appName: 'IPO Connect',
+  appName: 'Setu',
   commissionMin: 0,
   commissionMax: 50,
   commissionStep: 2.5,

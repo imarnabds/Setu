@@ -72,7 +72,7 @@ export default function App() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primaryActionBlue} />
-        <Text style={styles.loadingText}>Initializing IPO CONNECT...</Text>
+        <Text style={styles.loadingText}>Initializing Setu...</Text>
       </View>
     );
   }

@@ -136,8 +136,7 @@
       "commissionBasis": "Client Investor",
       "isAvailable": true,
       "createdAt": "2026-10-20T08:25:40.307Z",
-      "updatedAt": "2026-10-22T10:08:02.424Z",
-      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c3JfaW52ZXN0b3JfYXJqdW4iLCJpYXQiOjE3OTI2NjM2ODIsImV4cCI6MTc5MzI2ODQ4Mn0.U7qTLke3kUFaLlwOWNuwKhtKG3oGMkd3lm_pimQ-8Jo"
+      "updatedAt": "2026-10-22T10:26:17.557Z"
     },
     {
       "id": "usr_investor_neha",
@@ -295,9 +294,9 @@
       "pokeRequestId": "poke_arjun_to_rajesh",
       "agreedCommissionRate": 5,
       "agreedCommissionBasis": "Documented Advisory & Technical Assistance Base Fee",
-      "status": "active",
+      "status": "disconnected",
       "createdAt": "2026-10-21T08:25:40.307Z",
-      "updatedAt": "2026-10-22T08:25:40.306Z"
+      "updatedAt": "2026-10-22T10:25:53.879Z"
     }
   ],
   "messages": [
@@ -502,6 +501,16 @@
       },
       "ipAddress": "::1",
       "timestamp": "2026-10-22T10:08:02.424Z"
+    },
+    {
+      "id": "aud_mvjeb4rb",
+      "actorId": "usr_investor_arjun",
+      "action": "CONNECTION_DISCONNECTED",
+      "details": {
+        "connectionId": "conn_rajesh_arjun"
+      },
+      "ipAddress": "::1",
+      "timestamp": "2026-10-22T10:25:53.880Z"
     }
   ]
 }

@@ -116,7 +116,7 @@ const startServer = async () => {
 
     server.listen(config.port, () => {
       console.log(`====================================================`);
-      console.log(`🚀 IPO CONNECT Backend running on port ${config.port}`);
+      console.log(`🚀 Setu Backend running on port ${config.port}`);
       console.log(`📡 Real-Time Socket.IO initialized`);
       console.log(`🔒 Security, CORS & Helmet activated`);
       console.log(`💼 Commission Engine: 0% to 50% in 2.5% steps active`);
