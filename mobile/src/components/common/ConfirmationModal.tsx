@@ -134,15 +134,18 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 400,
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.cardLg,
     padding: spacing.xl,
-    ...shadows.lg
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    ...shadows.floating
   },
   title: {
     fontSize: typography.sizes.lg,
     fontWeight: typography.weights.bold,
     color: colors.primaryNavy,
-    marginBottom: spacing.xs
+    marginBottom: spacing.xs,
+    letterSpacing: -0.2
   },
   description: {
     fontSize: typography.sizes.sm,
@@ -172,16 +175,16 @@ const styles = StyleSheet.create({
   },
   sheetContent: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
+    borderTopLeftRadius: borderRadius.cardLg,
+    borderTopRightRadius: borderRadius.cardLg,
     maxHeight: '85%',
-    ...shadows.lg
+    ...shadows.floating
   },
   dragHandle: {
-    width: 36,
+    width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: colors.border,
+    backgroundColor: '#D1D9E4',
     alignSelf: 'center',
     marginTop: spacing.sm
   },
@@ -192,12 +195,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border
+    borderBottomColor: colors.borderLight
   },
   sheetTitle: {
     fontSize: typography.sizes.md,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+    color: colors.primaryNavy,
+    letterSpacing: -0.2
   },
   closeBtn: {
     padding: spacing.xs

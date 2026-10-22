@@ -182,10 +182,10 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: borderRadius.xl,
-    borderTopRightRadius: borderRadius.xl,
+    borderTopLeftRadius: borderRadius.cardLg,
+    borderTopRightRadius: borderRadius.cardLg,
     maxHeight: '80%',
-    ...shadows.lg
+    ...shadows.floating
   },
   header: {
     flexDirection: 'row',
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border
+    borderBottomColor: colors.borderLight
   },
   titleRow: {
     flexDirection: 'row',
@@ -204,7 +204,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: typography.sizes.md,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+    color: colors.primaryNavy,
+    letterSpacing: -0.2
   },
   actionsRow: {
     flexDirection: 'row',
@@ -248,24 +249,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     padding: spacing.md,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.card,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     backgroundColor: colors.surface,
-    marginBottom: spacing.sm
+    marginBottom: spacing.sm,
+    ...shadows.sm
   },
   notifItemUnread: {
     backgroundColor: colors.subtleBlueBackground,
-    borderColor: colors.primaryActionBlue
+    borderColor: '#D4E4FC'
   },
   notifIconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: colors.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.sm
+    marginRight: spacing.sm + 2
   },
   notifContent: {
     flex: 1

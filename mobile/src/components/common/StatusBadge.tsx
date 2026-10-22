@@ -31,13 +31,19 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
   const getBadgeConfig = () => {
     switch (status.toLowerCase()) {
       case 'verified':
-      case 'active':
       case 'accepted':
         return {
           bg: colors.badgeVerifiedBg,
           text: colors.badgeVerifiedText,
           icon: 'check',
-          display: label || (status === 'verified' ? 'Verified' : status === 'active' ? 'Active' : 'Accepted')
+          display: label || (status === 'verified' ? 'Verified' : 'Accepted')
+        };
+      case 'active':
+        return {
+          bg: colors.badgeActiveBg,
+          text: colors.badgeActiveText,
+          icon: 'check-circle',
+          display: label || 'Active'
         };
       case 'pending':
         return {
@@ -49,8 +55,8 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
       case 'rejected':
       case 'blocked':
         return {
-          bg: colors.errorLight,
-          text: colors.error,
+          bg: colors.badgeErrorBg,
+          text: colors.badgeErrorText,
           icon: 'x',
           display: label || (status === 'rejected' ? 'Declined' : 'Blocked')
         };
@@ -72,7 +78,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
     <View style={[styles.badge, { backgroundColor: config.bg }, style]}>
       {showIcon && (
         <View style={styles.iconContainer}>
-          <Icon name={config.icon} size={12} color={config.text} strokeWidth={2.5} />
+          <Icon name={config.icon} size={11} color={config.text} strokeWidth={2.5} />
         </View>
       )}
       <Text style={[styles.text, { color: config.text }]}>{config.display}</Text>
@@ -84,9 +90,9 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xxs + 1,
-    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 3.5,
+    borderRadius: borderRadius.chip,
     alignSelf: 'flex-start'
   },
   iconContainer: {
@@ -95,6 +101,7 @@ const styles = StyleSheet.create({
   text: {
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.semibold,
-    textTransform: 'capitalize'
+    textTransform: 'capitalize',
+    letterSpacing: 0.1
   }
 });

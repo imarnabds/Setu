@@ -243,14 +243,14 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: spacing.md,
-    paddingBottom: spacing.huge
+    paddingBottom: 100
   },
   headerCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.cardLg,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     marginBottom: spacing.md,
     ...shadows.sm
   },
@@ -270,7 +270,8 @@ const styles = StyleSheet.create({
   holderName: {
     fontSize: typography.sizes.lg,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+    color: colors.primaryNavy,
+    letterSpacing: -0.2
   },
   vBadge: {
     backgroundColor: colors.success,
@@ -288,10 +289,10 @@ const styles = StyleSheet.create({
   },
   commBanner: {
     backgroundColor: colors.subtleBlueBackground,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
+    borderRadius: 20,
+    padding: spacing.md + 2,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#D4E4FC',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between'
@@ -308,10 +309,11 @@ const styles = StyleSheet.create({
   commTitle: {
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+    color: colors.primaryNavy,
+    letterSpacing: 0.2
   },
   commBasis: {
-    fontSize: 10,
+    fontSize: 11,
     color: colors.secondaryText,
     marginTop: 1
   },
@@ -320,15 +322,17 @@ const styles = StyleSheet.create({
     marginLeft: spacing.sm
   },
   commRate: {
-    fontSize: typography.sizes.lg,
+    fontSize: 24,
     fontWeight: typography.weights.bold,
     color: colors.primaryActionBlue,
-    fontVariant: ['tabular-nums']
+    fontVariant: ['tabular-nums'],
+    letterSpacing: -0.5
   },
   commEdit: {
-    fontSize: 10,
+    fontSize: 11,
     color: colors.primaryActionBlue,
-    fontWeight: typography.weights.semibold
+    fontWeight: typography.weights.bold,
+    marginTop: 2
   },
   metricsGrid: {
     flexDirection: 'row',
@@ -340,21 +344,22 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: '46%',
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.card,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     ...shadows.sm
   },
   metricCardAlert: {
-    borderColor: colors.warning,
-    backgroundColor: colors.badgePendingBg
+    borderColor: '#FED7AA',
+    backgroundColor: '#FFF7ED'
   },
   metricValue: {
-    fontSize: typography.sizes.xxl,
+    fontSize: 26,
     fontWeight: typography.weights.bold,
     color: colors.primaryNavy,
-    fontVariant: ['tabular-nums']
+    fontVariant: ['tabular-nums'],
+    letterSpacing: -0.5
   },
   metricValueAlert: {
     color: colors.warning
@@ -362,7 +367,7 @@ const styles = StyleSheet.create({
   metricLabel: {
     fontSize: 11,
     color: colors.secondaryText,
-    marginTop: 2,
+    marginTop: 4,
     fontWeight: typography.weights.medium
   },
   quickActionsRow: {
@@ -373,13 +378,13 @@ const styles = StyleSheet.create({
   actionBtn: {
     flex: 1,
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.button,
     paddingVertical: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     ...shadows.sm
   },
   actionBtnText: {
@@ -406,11 +411,11 @@ const styles = StyleSheet.create({
   },
   emptyCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.card,
     padding: spacing.xl,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: colors.borderLight
   },
   emptyTitle: {
     fontSize: typography.sizes.sm,

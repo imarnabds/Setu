@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
-import { borderRadius, spacing } from '../../theme/spacing';
+import { borderRadius, spacing, shadows } from '../../theme/spacing';
 import { Icon } from './Icon';
 
 export interface TextInputFieldProps {
@@ -67,7 +67,7 @@ export const TextInputField: React.FC<TextInputFieldProps> = ({
             <Icon
               name={leftIcon}
               size={18}
-              color={error ? colors.error : isFocused ? colors.primaryActionBlue : colors.secondaryText}
+              color={error ? colors.error : isFocused ? colors.primaryBlue : colors.secondaryText}
             />
           </View>
         )}
@@ -75,7 +75,7 @@ export const TextInputField: React.FC<TextInputFieldProps> = ({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={colors.secondaryText}
+          placeholderTextColor={colors.mutedText}
           keyboardType={keyboardType}
           secureTextEntry={secureTextEntry}
           multiline={multiline}
@@ -127,21 +127,22 @@ const styles = StyleSheet.create({
   label: {
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.semibold,
-    color: colors.primaryNavy,
+    color: colors.deepNavy,
     marginBottom: spacing.xs
   },
   inputContainer: {
     height: 48,
-    borderRadius: borderRadius.md,
-    borderWidth: 1.5,
+    borderRadius: borderRadius.input,
+    borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md
+    paddingHorizontal: spacing.md,
+    ...shadows.sm
   },
   inputFocused: {
-    borderColor: colors.borderFocus,
+    borderColor: colors.primaryBlue,
     backgroundColor: colors.surface
   },
   inputError: {

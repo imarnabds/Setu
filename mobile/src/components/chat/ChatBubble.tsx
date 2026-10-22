@@ -80,9 +80,9 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
 const styles = StyleSheet.create({
   systemContainer: {
     backgroundColor: colors.subtleBlueBackground,
-    borderRadius: borderRadius.md,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#D4E4FC',
     padding: spacing.md,
     marginVertical: spacing.sm,
     marginHorizontal: spacing.md,
@@ -117,41 +117,44 @@ const styles = StyleSheet.create({
   bubble: {
     maxWidth: '78%',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.lg
+    paddingVertical: spacing.sm + 2,
+    borderRadius: 20
   },
   bubbleMe: {
     backgroundColor: colors.primaryActionBlue,
-    borderBottomRightRadius: 2
+    borderBottomRightRadius: 4
   },
   bubbleThem: {
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderBottomLeftRadius: 2
+    borderBottomLeftRadius: 4
   },
   messageText: {
     fontSize: typography.sizes.sm,
     lineHeight: 20
   },
   textMe: {
-    color: colors.surface
+    color: colors.surface,
+    fontWeight: typography.weights.normal
   },
   textThem: {
-    color: colors.primaryText
+    color: colors.primaryText,
+    fontWeight: typography.weights.normal
   },
   footerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    marginTop: 2
+    marginTop: 4
   },
   timeText: {
     fontSize: 10,
-    marginRight: 2
+    marginRight: 4,
+    fontVariant: ['tabular-nums']
   },
   timeMe: {
-    color: 'rgba(255,255,255,0.75)'
+    color: 'rgba(255,255,255,0.8)'
   },
   timeThem: {
     color: colors.secondaryText

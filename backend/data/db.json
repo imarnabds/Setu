@@ -34,8 +34,7 @@
       "commissionBasis": "Documented Advisory & Technical Assistance Base Fee",
       "isAvailable": true,
       "createdAt": "2026-10-20T08:25:40.307Z",
-      "updatedAt": "2026-10-22T08:26:06.830Z",
-      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c3JfaG9sZGVyX3JhamVzaCIsImlhdCI6MTc5MjY1NzU2NiwiZXhwIjoxNzkzMjYyMzY2fQ.KqVqz5OlfCdE6ggPbxNHB30YAMK7W-YWwQ5Ba7sjf8M"
+      "updatedAt": "2026-10-22T09:33:30.987Z"
     },
     {
       "id": "usr_holder_priya",
@@ -137,8 +136,8 @@
       "commissionBasis": "Client Investor",
       "isAvailable": true,
       "createdAt": "2026-10-20T08:25:40.307Z",
-      "updatedAt": "2026-10-22T09:14:11.099Z",
-      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c3JfaW52ZXN0b3JfYXJqdW4iLCJpYXQiOjE3OTI2NjA0NTEsImV4cCI6MTc5MzI2NTI1MX0.9oBp5azEhkWDPZpaUoW7duE81nEin6kpKbOeSXulSo8"
+      "updatedAt": "2026-10-22T10:08:02.424Z",
+      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c3JfaW52ZXN0b3JfYXJqdW4iLCJpYXQiOjE3OTI2NjM2ODIsImV4cCI6MTc5MzI2ODQ4Mn0.U7qTLke3kUFaLlwOWNuwKhtKG3oGMkd3lm_pimQ-8Jo"
     },
     {
       "id": "usr_investor_neha",
@@ -194,7 +193,40 @@
       "commissionBasis": "Platform Administration",
       "isAvailable": true,
       "createdAt": "2026-10-20T08:25:40.307Z",
-      "updatedAt": "2026-10-21T08:25:40.307Z"
+      "updatedAt": "2026-10-22T09:33:03.690Z"
+    },
+    {
+      "id": "usr_adroczqmvjcgsan",
+      "fullName": "Arnab Das",
+      "email": "ad.arnab03@gmail.com",
+      "mobileNumber": "+918521336517",
+      "password": "$2b$10$lg5vccKNc4oGgxyXSPtVyeZgFMd03qgYfwRjQDdSMJawz731wKMzq",
+      "primaryRole": "investor",
+      "isEmailVerified": true,
+      "isMobileVerified": true,
+      "isKycVerified": false,
+      "kycDetails": {
+        "documentType": "PAN & Aadhaar Identity",
+        "documentNumberMasked": "571900905475",
+        "submittedAt": "2026-10-22T09:35:04.649Z",
+        "status": "pending"
+      },
+      "avatarUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+      "city": "Mumbai",
+      "region": "Maharashtra",
+      "bio": "Individual retail investor actively exploring upcoming Mainboard & SME IPO opportunities.",
+      "investmentExperience": "1-2 Years",
+      "preferredLanguage": "English, Hindi",
+      "supportedCategories": [
+        "Mainboard IPO",
+        "Retail Application Strategy"
+      ],
+      "defaultCommissionRate": 0,
+      "commissionBasis": "Fixed Advisory / Assistance Service Fee Base",
+      "isAvailable": true,
+      "createdAt": "2026-10-22T09:34:18.431Z",
+      "updatedAt": "2026-10-22T09:35:04.649Z",
+      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c3JfYWRyb2N6cW12amNnc2FuIiwiaWF0IjoxNzkyNjYxNjU4LCJleHAiOjE3OTMyNjY0NTh9.f-1wIlTP04CmM-rQq0cjL6oeUaj2gqu0nWVin59g7jQ"
     }
   ],
   "pokes": [
@@ -233,12 +265,26 @@
       "recipientId": "usr_holder_priya",
       "senderRole": "investor",
       "recipientRole": "demat_holder",
-      "status": "pending",
+      "status": "cancelled",
       "proposedCommissionRate": 7.5,
       "commissionBasis": "Fixed Advisory Service Fee Base",
       "message": "Hi Priya, interested in your HNI allocation assistance parameters. Looking forward to connecting!",
       "createdAt": "2026-10-21T08:25:40.307Z",
-      "updatedAt": "2026-10-21T08:25:40.307Z"
+      "updatedAt": "2026-10-22T09:32:10.118Z",
+      "cancelledAt": "2026-10-22T09:32:10.118Z"
+    },
+    {
+      "id": "poke_k4r2la9mvjce8wz",
+      "senderId": "usr_investor_arjun",
+      "recipientId": "usr_holder_priya",
+      "senderRole": "investor",
+      "recipientRole": "demat_holder",
+      "status": "pending",
+      "proposedCommissionRate": 7.5,
+      "commissionBasis": "Fixed Advisory Service Fee Base",
+      "message": "Hello Priya Patel, I would like to connect and discuss IPO assistance.",
+      "createdAt": "2026-10-22T09:32:20.003Z",
+      "updatedAt": "2026-10-22T09:32:20.003Z"
     }
   ],
   "connections": [
@@ -321,6 +367,16 @@
       "referenceId": "conn_rajesh_arjun",
       "isRead": true,
       "createdAt": "2026-10-21T08:25:40.307Z"
+    },
+    {
+      "id": "notif_qyt0q15mvjce8x0",
+      "userId": "usr_holder_priya",
+      "title": "New Poke Received",
+      "message": "Arjun Kapoor sent you a Poke request. Review their profile to accept or decline.",
+      "type": "poke_received",
+      "referenceId": "poke_k4r2la9mvjce8wz",
+      "isRead": false,
+      "createdAt": "2026-10-22T09:32:20.003Z"
     }
   ],
   "auditLogs": [
@@ -353,6 +409,99 @@
       },
       "ipAddress": "::1",
       "timestamp": "2026-10-22T09:14:11.101Z"
+    },
+    {
+      "id": "aud_mvjc763p",
+      "actorId": "usr_investor_arjun",
+      "action": "USER_LOGIN",
+      "details": {
+        "role": "investor"
+      },
+      "ipAddress": "::1",
+      "timestamp": "2026-10-22T09:26:49.765Z"
+    },
+    {
+      "id": "aud_el2hz47mvjce1ah",
+      "actorId": "usr_investor_arjun",
+      "action": "POKE_CANCELLED",
+      "details": {
+        "pokeId": "poke_arjun_to_priya",
+        "recipientId": "usr_holder_priya"
+      },
+      "ipAddress": "::1",
+      "timestamp": "2026-10-22T09:32:10.118Z"
+    },
+    {
+      "id": "aud_z5hzdg9mvjce8x0",
+      "actorId": "usr_investor_arjun",
+      "action": "POKE_SENT",
+      "details": {
+        "recipientId": "usr_holder_priya",
+        "proposedRate": 7.5
+      },
+      "ipAddress": "::1",
+      "timestamp": "2026-10-22T09:32:20.003Z"
+    },
+    {
+      "id": "aud_mvjcez61",
+      "actorId": "usr_admin_compliance",
+      "action": "USER_LOGIN",
+      "details": {
+        "role": "admin"
+      },
+      "ipAddress": "::1",
+      "timestamp": "2026-10-22T09:32:54.025Z"
+    },
+    {
+      "id": "aud_mvjcf9va",
+      "actorId": "usr_holder_rajesh",
+      "action": "USER_LOGIN",
+      "details": {
+        "role": "demat_holder"
+      },
+      "ipAddress": "::1",
+      "timestamp": "2026-10-22T09:33:07.894Z"
+    },
+    {
+      "id": "aud_mvjcgsap",
+      "actorId": "usr_adroczqmvjcgsan",
+      "action": "USER_REGISTERED",
+      "details": {
+        "role": "investor",
+        "email": "ad.arnab03@gmail.com"
+      },
+      "ipAddress": "::1",
+      "timestamp": "2026-10-22T09:34:18.431Z"
+    },
+    {
+      "id": "aud_mvjchryi",
+      "actorId": "usr_adroczqmvjcgsan",
+      "action": "KYC_SUBMITTED",
+      "details": {
+        "documentType": "PAN & Aadhaar Identity"
+      },
+      "ipAddress": "::1",
+      "timestamp": "2026-10-22T09:35:04.649Z"
+    },
+    {
+      "id": "aud_mvjdndo9",
+      "actorId": "usr_investor_arjun",
+      "action": "USER_LOGIN",
+      "details": {
+        "role": "investor"
+      },
+      "ipAddress": "::1",
+      "timestamp": "2026-10-22T10:07:25.689Z"
+    },
+    {
+      "id": "aud_mvjdo60o",
+      "actorId": "usr_investor_arjun",
+      "action": "USER_LOGIN",
+      "details": {
+        "role": "investor"
+      },
+      "ipAddress": "::1",
+      "timestamp": "2026-10-22T10:08:02.424Z"
     }
   ]
 }

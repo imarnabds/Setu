@@ -28,7 +28,7 @@ export const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
     return n.substring(0, 2).toUpperCase();
   };
 
-  const badgeSize = Math.max(14, Math.round(size * 0.32));
+  const badgeSize = Math.max(13, Math.round(size * 0.3));
 
   return (
     <View style={[{ width: size, height: size }, style]}>
@@ -53,7 +53,7 @@ export const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
             style={[
               styles.initials,
               {
-                fontSize: Math.round(size * 0.4)
+                fontSize: Math.round(size * 0.38)
               }
             ]}
           >
@@ -83,15 +83,15 @@ export const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
 
 const styles = StyleSheet.create({
   avatarContainer: {
-    backgroundColor: colors.subtleBlueBackground,
-    borderWidth: 1.5,
+    backgroundColor: colors.surfaceSecondary,
+    borderWidth: 1,
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden'
   },
   initials: {
-    color: colors.primaryNavy,
+    color: colors.deepNavy,
     fontWeight: typography.weights.bold
   },
   verifiedBadge: {

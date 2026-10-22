@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
-import { borderRadius, spacing } from '../../theme/spacing';
+import { borderRadius, spacing, shadows } from '../../theme/spacing';
 import { Icon } from '../common/Icon';
 
 interface MessageComposerProps {
@@ -103,15 +103,15 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: colors.borderLight,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm
+    paddingVertical: spacing.sm + 2
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surfaceSubtle,
-    borderRadius: borderRadius.full,
+    borderRadius: borderRadius.button,
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: spacing.md,
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    minHeight: 38,
+    minHeight: 40,
     maxHeight: 100,
     fontSize: typography.sizes.sm,
     color: colors.primaryText,
@@ -134,9 +134,10 @@ const styles = StyleSheet.create({
     marginLeft: spacing.sm
   },
   sendButtonActive: {
-    backgroundColor: colors.primaryActionBlue
+    backgroundColor: colors.primaryActionBlue,
+    ...shadows.sm
   },
   sendButtonDisabled: {
-    backgroundColor: colors.border
+    backgroundColor: colors.borderLight
   }
 });

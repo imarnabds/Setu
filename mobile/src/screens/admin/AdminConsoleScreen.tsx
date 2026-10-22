@@ -333,14 +333,14 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: spacing.md,
-    paddingBottom: spacing.huge
+    paddingBottom: 100
   },
   header: {
     backgroundColor: colors.surface,
     padding: spacing.lg,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.cardLg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     marginBottom: spacing.md,
     ...shadows.sm
   },
@@ -353,7 +353,8 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.lg,
     fontWeight: typography.weights.bold,
     color: colors.primaryNavy,
-    marginLeft: spacing.sm
+    marginLeft: spacing.sm,
+    letterSpacing: -0.2
   },
   headerSub: {
     fontSize: typography.sizes.xs,
@@ -370,21 +371,22 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: '46%',
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.card,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     ...shadows.sm
   },
   statBoxAlert: {
-    backgroundColor: colors.badgePendingBg,
-    borderColor: colors.warning
+    backgroundColor: '#FFF7ED',
+    borderColor: '#FED7AA'
   },
   statVal: {
-    fontSize: typography.sizes.xxl,
+    fontSize: 26,
     fontWeight: typography.weights.bold,
     color: colors.primaryNavy,
-    fontVariant: ['tabular-nums']
+    fontVariant: ['tabular-nums'],
+    letterSpacing: -0.5
   },
   statValAlert: {
     color: colors.warning
@@ -392,14 +394,15 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 11,
     color: colors.secondaryText,
-    marginTop: 2
+    marginTop: 3,
+    fontWeight: typography.weights.medium
   },
   tabBar: {
     flexDirection: 'row',
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.chip,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     marginBottom: spacing.md,
     overflow: 'hidden'
   },
@@ -410,7 +413,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface
   },
   tabActive: {
-    backgroundColor: colors.primaryNavy
+    backgroundColor: colors.primaryActionBlue
   },
   tabText: {
     fontSize: 11,
@@ -425,10 +428,10 @@ const styles = StyleSheet.create({
   },
   userCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.card,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     ...shadows.sm
   },
   userTop: {
@@ -436,13 +439,14 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   userInfo: {
-    marginLeft: spacing.sm,
+    marginLeft: spacing.md,
     flex: 1
   },
   userName: {
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+    color: colors.primaryNavy,
+    letterSpacing: -0.2
   },
   userRole: {
     fontSize: 11,
@@ -451,9 +455,11 @@ const styles = StyleSheet.create({
   },
   kycDocBox: {
     backgroundColor: colors.surfaceSubtle,
-    borderRadius: borderRadius.sm,
-    padding: spacing.sm,
-    marginTop: spacing.sm
+    borderRadius: borderRadius.md,
+    padding: spacing.sm + 2,
+    marginTop: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.borderLight
   },
   kycDocType: {
     fontSize: typography.sizes.xs,
@@ -472,15 +478,15 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     flex: 1,
-    height: 36,
-    borderRadius: borderRadius.sm,
+    height: 38,
+    borderRadius: borderRadius.button,
     alignItems: 'center',
     justifyContent: 'center'
   },
   btnReject: {
-    backgroundColor: colors.errorLight,
+    backgroundColor: '#FDEEED',
     borderWidth: 1,
-    borderColor: colors.error
+    borderColor: '#FBD4D3'
   },
   btnRejectText: {
     color: colors.error,
@@ -488,7 +494,8 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold
   },
   btnApprove: {
-    backgroundColor: colors.success
+    backgroundColor: colors.primaryActionBlue,
+    ...shadows.sm
   },
   btnApproveText: {
     color: colors.surface,
@@ -500,7 +507,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: colors.borderLight,
     paddingTop: 6
   },
   userDetailText: {
@@ -545,10 +552,11 @@ const styles = StyleSheet.create({
   },
   auditCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.sm,
-    padding: spacing.sm,
+    borderRadius: borderRadius.card,
+    padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: colors.borderLight,
+    marginBottom: spacing.xs
   },
   auditHeader: {
     flexDirection: 'row',
@@ -572,11 +580,11 @@ const styles = StyleSheet.create({
   },
   emptyCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.card,
     padding: spacing.xl,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: colors.borderLight
   },
   emptyTitle: {
     fontSize: typography.sizes.sm,
@@ -590,10 +598,10 @@ const styles = StyleSheet.create({
     marginTop: 2
   },
   reviewInput: {
-    height: 44,
+    height: 46,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.input,
     paddingHorizontal: spacing.md,
     fontSize: typography.sizes.sm,
     color: colors.primaryText,

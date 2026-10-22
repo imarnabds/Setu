@@ -155,9 +155,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl
   },
   title: {
-    fontSize: typography.sizes.title,
+    fontSize: 26,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+    color: colors.primaryNavy,
+    letterSpacing: -0.3
   },
   subtitle: {
     fontSize: typography.sizes.sm,
@@ -167,19 +168,21 @@ const styles = StyleSheet.create({
   },
   formCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.cardLg,
     padding: spacing.xl,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     ...shadows.sm
   },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.errorLight,
+    backgroundColor: '#FDEEED',
     padding: spacing.md,
     borderRadius: borderRadius.md,
-    marginBottom: spacing.md
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: '#FBD4D3'
   },
   errorText: {
     color: colors.error,

@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
-import { borderRadius, spacing } from '../../theme/spacing';
+import { borderRadius, spacing, shadows } from '../../theme/spacing';
 import { Icon } from './Icon';
 
 interface SecondaryButtonProps {
@@ -33,20 +33,20 @@ export const SecondaryButton: React.FC<SecondaryButtonProps> = ({
 }) => {
   return (
     <TouchableOpacity
-      activeOpacity={0.75}
+      activeOpacity={0.8}
       onPress={onPress}
       disabled={disabled || loading}
       style={[styles.button, disabled && styles.disabled, style]}
     >
       {loading ? (
-        <ActivityIndicator color={colors.primaryActionBlue} size="small" />
+        <ActivityIndicator color={colors.primaryBlue} size="small" />
       ) : (
         <>
           {icon && (
             <Icon
               name={icon}
               size={18}
-              color={disabled ? colors.secondaryText : colors.primaryActionBlue}
+              color={disabled ? colors.secondaryText : colors.deepNavy}
             />
           )}
           <Text
@@ -68,14 +68,15 @@ export const SecondaryButton: React.FC<SecondaryButtonProps> = ({
 const styles = StyleSheet.create({
   button: {
     height: 48,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.button,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.lg
+    paddingHorizontal: spacing.lg,
+    ...shadows.sm
   },
   disabled: {
     borderColor: colors.border,
@@ -84,6 +85,6 @@ const styles = StyleSheet.create({
   text: {
     fontSize: typography.sizes.base,
     fontWeight: typography.weights.semibold,
-    color: colors.primaryNavy
+    color: colors.deepNavy
   }
 });

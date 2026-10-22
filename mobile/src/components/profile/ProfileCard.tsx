@@ -121,7 +121,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.card,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
@@ -143,7 +143,8 @@ const styles = StyleSheet.create({
   name: {
     fontSize: typography.sizes.base,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+    color: colors.primaryNavy,
+    letterSpacing: -0.2
   },
   verifiedBadge: {
     backgroundColor: colors.success,
@@ -157,16 +158,17 @@ const styles = StyleSheet.create({
   location: {
     fontSize: typography.sizes.xs,
     color: colors.secondaryText,
-    marginTop: 2
+    marginTop: 2,
+    fontWeight: typography.weights.normal
   },
   rateBadge: {
     backgroundColor: colors.subtleBlueBackground,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    borderRadius: borderRadius.md,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: borderRadius.chip,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: '#D4E4FC'
   },
   rateText: {
     fontSize: typography.sizes.base,
@@ -176,15 +178,18 @@ const styles = StyleSheet.create({
   },
   rateSub: {
     fontSize: 9,
-    color: colors.secondaryText,
-    fontWeight: typography.weights.medium,
-    textTransform: 'uppercase'
+    color: colors.secondaryBlue,
+    fontWeight: typography.weights.bold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginTop: 1
   },
   bio: {
     fontSize: typography.sizes.xs,
     color: colors.primaryText,
-    lineHeight: 18,
-    marginVertical: spacing.sm
+    lineHeight: 19,
+    marginVertical: spacing.sm,
+    fontWeight: typography.weights.normal
   },
   categories: {
     flexDirection: 'row',
@@ -194,9 +199,9 @@ const styles = StyleSheet.create({
   },
   catChip: {
     backgroundColor: colors.surfaceSubtle,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: borderRadius.sm,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border
   },
@@ -207,9 +212,11 @@ const styles = StyleSheet.create({
   },
   catMore: {
     backgroundColor: colors.surfaceSubtle,
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    borderRadius: borderRadius.sm
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border
   },
   catMoreText: {
     fontSize: 11,
@@ -221,8 +228,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing.sm
+    borderTopColor: colors.borderLight,
+    paddingTop: spacing.sm + 2
   },
   basisContainer: {
     flexDirection: 'row',
@@ -233,7 +240,8 @@ const styles = StyleSheet.create({
   basisText: {
     fontSize: 11,
     color: colors.secondaryText,
-    marginLeft: 4,
-    flex: 1
+    marginLeft: 6,
+    flex: 1,
+    fontWeight: typography.weights.medium
   }
 });

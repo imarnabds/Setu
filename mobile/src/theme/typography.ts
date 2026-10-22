@@ -1,3 +1,4 @@
+// Centralized Typography System — Inter / Clean Fintech Hierarchy
 export const typography = {
   fontFamily: {
     regular: 'System',
@@ -7,16 +8,17 @@ export const typography = {
   },
   sizes: {
     xs: 11,
-    sm: 13,
-    base: 15,
+    sm: 12.5,
+    base: 14.5,
     md: 16,
     lg: 18,
     xl: 20,
     xxl: 24,
-    title: 28,
-    display: 34
+    title: 26,
+    display: 30
   },
   weights: {
+    normal: '400' as const,
     regular: '400' as const,
     medium: '500' as const,
     semibold: '600' as const,
@@ -24,7 +26,7 @@ export const typography = {
   },
   lineHeights: {
     tight: 1.2,
-    normal: 1.4,
+    normal: 1.45,
     relaxed: 1.6
   }
 };

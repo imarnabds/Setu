@@ -243,7 +243,7 @@ export const RequestCard: React.FC<RequestCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.card,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     flex: 1
   },
   nameContainer: {
-    marginLeft: spacing.sm,
+    marginLeft: spacing.md,
     flex: 1
   },
   nameRow: {
@@ -271,10 +271,11 @@ const styles = StyleSheet.create({
   nameText: {
     fontSize: typography.sizes.base,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+    color: colors.primaryNavy,
+    letterSpacing: -0.2
   },
   verifiedIcon: {
-    marginLeft: 4
+    marginLeft: 5
   },
   metaText: {
     fontSize: typography.sizes.xs,
@@ -283,21 +284,25 @@ const styles = StyleSheet.create({
   },
   messageContainer: {
     backgroundColor: colors.surfaceSubtle,
-    padding: spacing.sm,
-    borderRadius: borderRadius.sm,
-    marginTop: spacing.sm
+    padding: spacing.sm + 2,
+    borderRadius: borderRadius.md,
+    marginTop: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.borderLight
   },
   messageText: {
     fontSize: typography.sizes.sm,
     color: colors.primaryText,
     fontStyle: 'italic',
-    lineHeight: 18
+    lineHeight: 19
   },
   termsBox: {
     backgroundColor: colors.subtleBlueBackground,
-    padding: spacing.sm,
-    borderRadius: borderRadius.sm,
-    marginTop: spacing.sm
+    padding: spacing.sm + 2,
+    borderRadius: 16,
+    marginTop: spacing.sm,
+    borderWidth: 1,
+    borderColor: '#D4E4FC'
   },
   termsRow: {
     flexDirection: 'row',
@@ -306,18 +311,21 @@ const styles = StyleSheet.create({
   termsLabel: {
     fontSize: typography.sizes.xs,
     color: colors.secondaryText,
-    marginLeft: 6
+    marginLeft: 6,
+    fontWeight: typography.weights.medium
   },
   termsValue: {
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
     color: colors.primaryActionBlue,
-    marginLeft: 4
+    marginLeft: 4,
+    fontVariant: ['tabular-nums']
   },
   termsBasisText: {
     fontSize: 11,
     color: colors.secondaryText,
-    marginTop: 2
+    marginTop: 3,
+    lineHeight: 15
   },
   actionRow: {
     flexDirection: 'row',
@@ -325,18 +333,18 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing.sm
+    borderTopColor: colors.borderLight,
+    paddingTop: spacing.sm + 2
   },
   btn: {
     height: 38,
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.button,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.lg
   },
   btnDecline: {
-    backgroundColor: colors.surfaceSubtle,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border
   },
@@ -346,7 +354,8 @@ const styles = StyleSheet.create({
     color: colors.secondaryText
   },
   btnAccept: {
-    backgroundColor: colors.primaryActionBlue
+    backgroundColor: colors.primaryActionBlue,
+    ...shadows.sm
   },
   btnAcceptText: {
     fontSize: typography.sizes.sm,
@@ -364,9 +373,10 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.medium
   },
   btnChat: {
-    backgroundColor: colors.success,
+    backgroundColor: colors.primaryActionBlue,
     flexDirection: 'row',
-    paddingHorizontal: spacing.xl
+    paddingHorizontal: spacing.xl,
+    ...shadows.sm
   },
   btnChatText: {
     color: colors.surface,
@@ -377,21 +387,23 @@ const styles = StyleSheet.create({
   modalTermsBox: {
     backgroundColor: colors.subtleBlueBackground,
     padding: spacing.md,
-    borderRadius: borderRadius.sm,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: '#D4E4FC'
   },
   modalTermsTitle: {
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.bold,
     color: colors.primaryNavy,
-    textTransform: 'uppercase'
+    textTransform: 'uppercase',
+    letterSpacing: 0.5
   },
   modalTermsHighlight: {
     fontSize: typography.sizes.xl,
     fontWeight: typography.weights.bold,
     color: colors.primaryActionBlue,
-    marginTop: 4
+    marginTop: 4,
+    fontVariant: ['tabular-nums']
   },
   modalTermsSub: {
     fontSize: typography.sizes.xs,
@@ -405,10 +417,10 @@ const styles = StyleSheet.create({
     lineHeight: 16
   },
   reasonInput: {
-    height: 44,
+    height: 46,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.input,
     paddingHorizontal: spacing.md,
     fontSize: typography.sizes.sm,
     color: colors.primaryText,

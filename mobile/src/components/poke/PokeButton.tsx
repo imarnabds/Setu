@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
-import { borderRadius, spacing } from '../../theme/spacing';
+import { borderRadius, spacing, shadows } from '../../theme/spacing';
 import { Icon } from '../common/Icon';
 import { ConfirmationModal } from '../common/ConfirmationModal';
 
@@ -86,7 +86,7 @@ export const PokeButton: React.FC<PokeButtonProps> = ({
       case 'not_connected':
         return (
           <>
-            <Icon name="poke" size={16} color={colors.surface} />
+            <Icon name="poke" size={15} color={colors.surface} />
             <Text style={[styles.text, styles.textWhite]}>Poke</Text>
           </>
         );
@@ -115,7 +115,7 @@ export const PokeButton: React.FC<PokeButtonProps> = ({
       default:
         return (
           <>
-            <Icon name="poke" size={16} color={colors.surface} />
+            <Icon name="poke" size={15} color={colors.surface} />
             <Text style={[styles.text, styles.textWhite]}>Poke</Text>
           </>
         );
@@ -141,7 +141,7 @@ export const PokeButton: React.FC<PokeButtonProps> = ({
   return (
     <>
       <TouchableOpacity
-        activeOpacity={0.8}
+        activeOpacity={0.85}
         onPress={handlePress}
         disabled={loading || state === 'rejected' || state === 'blocked'}
         style={[styles.button, getButtonStyle(), style]}
@@ -153,7 +153,7 @@ export const PokeButton: React.FC<PokeButtonProps> = ({
       <ConfirmationModal
         visible={confirmModalVisible}
         title={`Send Poke to ${recipientName}?`}
-        description={`Poking requests an introduction. A private chat and service discussion will only be enabled after ${recipientName} accepts your request.`}
+        description={`Poking initiates an introduction. A private chat and service discussion will only become available after ${recipientName} accepts your request.`}
         confirmLabel="Send Poke"
         cancelLabel="Cancel"
         loading={loading}
@@ -193,14 +193,15 @@ export const PokeButton: React.FC<PokeButtonProps> = ({
 const styles = StyleSheet.create({
   button: {
     height: 38,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.button,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.md
+    paddingHorizontal: spacing.lg,
+    ...shadows.sm
   },
   btnPrimary: {
-    backgroundColor: colors.primaryActionBlue
+    backgroundColor: colors.primaryBlue
   },
   btnPending: {
     backgroundColor: colors.badgePendingBg,
@@ -236,23 +237,23 @@ const styles = StyleSheet.create({
     marginLeft: 0
   },
   termsBox: {
-    backgroundColor: colors.subtleBlueBackground,
+    backgroundColor: colors.softBlueHighlight,
     padding: spacing.md,
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.border
   },
   termsTitle: {
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy,
+    color: colors.deepNavy,
     textTransform: 'uppercase',
     letterSpacing: 0.5
   },
   termsRate: {
     fontSize: typography.sizes.md,
     fontWeight: typography.weights.bold,
-    color: colors.primaryActionBlue,
+    color: colors.primaryBlue,
     marginTop: 2
   },
   termsBasis: {

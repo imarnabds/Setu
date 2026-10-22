@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   },
   webDesktopBackground: {
     flex: 1,
-    backgroundColor: '#0F1A2A',
+    backgroundColor: '#E4E9F0',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16
@@ -252,13 +252,13 @@ const styles = StyleSheet.create({
     maxWidth: 440,
     height: '96%',
     maxHeight: 900,
-    backgroundColor: '#000000',
-    borderRadius: 44,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 48,
     borderWidth: 6,
-    borderColor: '#263445',
+    borderColor: '#FFFFFF',
     overflow: 'hidden',
     position: 'relative',
-    ...shadows.lg
+    ...shadows.floating
   },
   phoneSpeakerBar: {
     position: 'absolute',
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     transform: [{ translateX: -40 }],
     width: 80,
     height: 16,
-    backgroundColor: '#000000',
+    backgroundColor: '#172C49',
     borderRadius: 8,
     zIndex: 9999
   },

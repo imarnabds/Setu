@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
-import { borderRadius, spacing } from '../../theme/spacing';
+import { borderRadius, spacing, shadows } from '../../theme/spacing';
 import { Icon } from './Icon';
 
 interface SearchBarProps {
@@ -24,7 +24,7 @@ interface SearchBarProps {
 export const SearchBar: React.FC<SearchBarProps> = ({
   value,
   onChangeText,
-  placeholder = 'Search by name, city, or IPO expertise...',
+  placeholder = 'Search holders by name, region, or skills...',
   onClear,
   onFilterPress,
   hasActiveFilters = false,
@@ -33,12 +33,12 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   return (
     <View style={[styles.container, style]}>
       <View style={styles.searchBox}>
-        <Icon name="search" size={18} color={colors.secondaryText} />
+        <Icon name="search" size={17} color={colors.secondaryText} />
         <TextInput
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={colors.secondaryText}
+          placeholderTextColor={colors.mutedText}
           style={styles.input}
         />
         {value.length > 0 && (
@@ -47,7 +47,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             onPress={onClear || (() => onChangeText(''))}
             style={styles.clearButton}
           >
-            <Icon name="x" size={16} color={colors.secondaryText} />
+            <Icon name="x" size={15} color={colors.secondaryText} />
           </TouchableOpacity>
         )}
       </View>
@@ -59,8 +59,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         >
           <Icon
             name="filter"
-            size={18}
-            color={hasActiveFilters ? colors.surface : colors.primaryNavy}
+            size={17}
+            color={hasActiveFilters ? colors.surface : colors.deepNavy}
           />
         </TouchableOpacity>
       )}
@@ -72,18 +72,19 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.md
+    marginBottom: spacing.sm
   },
   searchBox: {
     flex: 1,
     height: 44,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.chip,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md
+    paddingHorizontal: spacing.md,
+    ...shadows.sm
   },
   input: {
     flex: 1,
@@ -98,16 +99,17 @@ const styles = StyleSheet.create({
   filterButton: {
     width: 44,
     height: 44,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.chip,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: spacing.sm
+    marginLeft: spacing.sm,
+    ...shadows.sm
   },
   filterButtonActive: {
-    backgroundColor: colors.primaryActionBlue,
-    borderColor: colors.primaryActionBlue
+    backgroundColor: colors.primaryBlue,
+    borderColor: colors.primaryBlue
   }
 });

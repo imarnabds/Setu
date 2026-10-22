@@ -149,24 +149,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     padding: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border
+    borderBottomColor: colors.borderLight
   },
   feed: {
     flex: 1
   },
   feedContent: {
     padding: spacing.md,
-    paddingBottom: spacing.huge
+    paddingBottom: 100
   },
   conversationCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.card,
     padding: spacing.md,
     marginBottom: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     ...shadows.sm
   },
   cardInfo: {
@@ -181,19 +181,23 @@ const styles = StyleSheet.create({
   partnerName: {
     fontSize: typography.sizes.base,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+    color: colors.primaryNavy,
+    letterSpacing: -0.2
   },
   timeText: {
-    fontSize: 10,
-    color: colors.secondaryText
+    fontSize: 11,
+    color: colors.secondaryText,
+    fontVariant: ['tabular-nums']
   },
   termsTag: {
     backgroundColor: colors.subtleBlueBackground,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
     alignSelf: 'flex-start',
-    marginVertical: 4
+    marginVertical: 4,
+    borderWidth: 1,
+    borderColor: '#D4E4FC'
   },
   termsTagText: {
     fontSize: 10,
@@ -207,11 +211,12 @@ const styles = StyleSheet.create({
   },
   unreadBadge: {
     backgroundColor: colors.primaryActionBlue,
-    width: 20,
+    minWidth: 20,
     height: 20,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 5,
     marginLeft: spacing.xs
   },
   unreadText: {

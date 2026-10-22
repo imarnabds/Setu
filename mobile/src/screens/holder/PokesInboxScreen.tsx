@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border
+    borderBottomColor: colors.borderLight
   },
   tab: {
     flex: 1,
@@ -174,6 +174,6 @@ const styles = StyleSheet.create({
   },
   feedContent: {
     padding: spacing.md,
-    paddingBottom: spacing.huge
+    paddingBottom: 100
   }
 });

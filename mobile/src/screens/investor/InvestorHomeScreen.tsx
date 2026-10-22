@@ -61,29 +61,28 @@ export const InvestorHomeScreen: React.FC = () => {
       contentContainerStyle={styles.contentContainer}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      {/* Greeting Banner */}
-      <View style={styles.greetingCard}>
-        <View style={styles.greetingHeader}>
-          <View>
-            <Text style={styles.greetingTitle}>Hello, {user?.fullName || 'Investor'} 👋</Text>
-            <Text style={styles.greetingSub}>Ready to explore upcoming IPO allocations?</Text>
+      {/* Main Action Card */}
+      <View style={styles.mainActionCard}>
+        <View style={styles.cardHeader}>
+          <View style={styles.cardHeaderLeft}>
+            <Text style={styles.cardBadge}>Active IPO Cycle</Text>
+            <Text style={styles.cardTitle}>Find your IPO connection</Text>
+            <Text style={styles.cardSubtitle}>
+              Discover verified Demat Account Holders, propose transparent service terms, and send Poke requests.
+            </Text>
           </View>
-          <ProfileAvatar
-            name={user?.fullName || 'Investor'}
-            avatarUrl={user?.avatarUrl}
-            size={48}
-            isVerified={user?.isKycVerified}
-          />
+          <View style={styles.cardIconBox}>
+            <Icon name="search" size={26} color={colors.primaryActionBlue} />
+          </View>
         </View>
 
-        {/* Big Action Button */}
+        {/* Big Blue Pill Action */}
         <TouchableOpacity
-          activeOpacity={0.85}
+          activeOpacity={0.88}
           onPress={() => setActiveTab('discover')}
           style={styles.findHoldersBtn}
         >
-          <Icon name="search" size={20} color={colors.surface} />
-          <Text style={styles.findHoldersText}>Find Demat Account Holders</Text>
+          <Text style={styles.findHoldersText}>Discover Holders</Text>
           <Icon name="arrow-right" size={18} color={colors.surface} />
         </TouchableOpacity>
       </View>
@@ -91,17 +90,17 @@ export const InvestorHomeScreen: React.FC = () => {
       {/* How Poke Works Explainer */}
       <View style={styles.explainerCard}>
         <View style={styles.explainerHeader}>
-          <Icon name="info" size={16} color={colors.primaryActionBlue} />
+          <Icon name="shield" size={16} color={colors.primaryActionBlue} />
           <Text style={styles.explainerTitle}>How Poke Works</Text>
         </View>
         <Text style={styles.explainerBody}>
-          Send a <Text style={styles.bold}>Poke</Text> to request an introduction. When the Demat Account Holder accepts, agreed service terms are locked and a private in-app chat opens instantly.
+          Send a <Text style={styles.bold}>Poke</Text> to request an introduction. Once accepted, agreed terms are pinned and an authorized private chat opens instantly.
         </Text>
       </View>
 
       {/* Pending Requests Preview */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>My Pending Pokes ({pendingPokes.length})</Text>
+        <Text style={styles.sectionTitle}>Pending Pokes ({pendingPokes.length})</Text>
         <TouchableOpacity onPress={() => setActiveTab('requests')}>
           <Text style={styles.sectionLink}>View All</Text>
         </TouchableOpacity>
@@ -122,7 +121,7 @@ export const InvestorHomeScreen: React.FC = () => {
               <ProfileAvatar
                 name={recipient?.fullName || 'Holder'}
                 avatarUrl={recipient?.avatarUrl}
-                size={40}
+                size={44}
                 isVerified={recipient?.isKycVerified}
               />
               <View style={styles.previewInfo}>
@@ -203,53 +202,79 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: spacing.md,
-    paddingBottom: spacing.huge
+    paddingBottom: 100
   },
-  greetingCard: {
+  mainActionCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.cardLg,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     marginBottom: spacing.md,
     ...shadows.sm
   },
-  greetingHeader: {
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: spacing.md
   },
-  greetingTitle: {
-    fontSize: typography.sizes.lg,
-    fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+  cardHeaderLeft: {
+    flex: 1,
+    marginRight: spacing.md
   },
-  greetingSub: {
-    fontSize: typography.sizes.xs,
+  cardBadge: {
+    fontSize: 11,
+    fontWeight: typography.weights.bold,
+    color: colors.primaryActionBlue,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+    marginBottom: 4
+  },
+  cardTitle: {
+    fontSize: 22,
+    fontWeight: typography.weights.bold,
+    color: colors.primaryNavy,
+    letterSpacing: -0.4,
+    marginBottom: 6
+  },
+  cardSubtitle: {
+    fontSize: 13,
     color: colors.secondaryText,
-    marginTop: 2
+    lineHeight: 18
+  },
+  cardIconBox: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.subtleBlueBackground,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#D4E4FC'
   },
   findHoldersBtn: {
     backgroundColor: colors.primaryActionBlue,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.button,
     height: 48,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+    ...shadows.sm
   },
   findHoldersText: {
     color: colors.surface,
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.bold,
+    marginRight: 8
   },
   explainerCard: {
     backgroundColor: colors.subtleBlueBackground,
-    borderRadius: borderRadius.md,
+    borderRadius: 20,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#D4E4FC',
     marginBottom: spacing.lg
   },
   explainerHeader: {
@@ -291,11 +316,11 @@ const styles = StyleSheet.create({
   },
   emptyBox: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.card,
     padding: spacing.lg,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     marginBottom: spacing.md
   },
   emptyText: {
@@ -310,22 +335,24 @@ const styles = StyleSheet.create({
   },
   previewCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.card,
     padding: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.sm
+    borderColor: colors.borderLight,
+    marginBottom: spacing.sm,
+    ...shadows.sm
   },
   previewInfo: {
-    marginLeft: spacing.sm,
+    marginLeft: spacing.md,
     flex: 1
   },
   previewName: {
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+    color: colors.primaryNavy,
+    letterSpacing: -0.2
   },
   previewSub: {
     fontSize: 11,
@@ -334,23 +361,24 @@ const styles = StyleSheet.create({
   },
   connectionCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.card,
     padding: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     marginBottom: spacing.sm,
     ...shadows.sm
   },
   connInfo: {
-    marginLeft: spacing.sm,
+    marginLeft: spacing.md,
     flex: 1
   },
   connName: {
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+    color: colors.primaryNavy,
+    letterSpacing: -0.2
   },
   connTerms: {
     fontSize: 11,
@@ -360,10 +388,12 @@ const styles = StyleSheet.create({
   chatActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    borderRadius: borderRadius.sm,
-    backgroundColor: colors.subtleBlueBackground
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: colors.subtleBlueBackground,
+    borderWidth: 1,
+    borderColor: '#D4E4FC'
   },
   chatActionText: {
     fontSize: typography.sizes.xs,
@@ -373,10 +403,10 @@ const styles = StyleSheet.create({
   },
   complianceNotice: {
     backgroundColor: colors.surfaceSubtle,
-    borderRadius: borderRadius.md,
+    borderRadius: 20,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     marginTop: spacing.md
   },
   noticeIconRow: {

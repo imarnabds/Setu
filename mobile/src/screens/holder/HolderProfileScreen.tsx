@@ -210,16 +210,16 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: spacing.md,
-    paddingBottom: spacing.huge
+    paddingBottom: 100
   },
   profileCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.cardLg,
     padding: spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     marginBottom: spacing.md,
     ...shadows.sm
   },
@@ -234,7 +234,8 @@ const styles = StyleSheet.create({
   name: {
     fontSize: typography.sizes.lg,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+    color: colors.primaryNavy,
+    letterSpacing: -0.2
   },
   vBadge: {
     backgroundColor: colors.success,
@@ -258,10 +259,10 @@ const styles = StyleSheet.create({
   },
   sectionCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.cardLg,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     marginBottom: spacing.md,
     ...shadows.sm
   },
@@ -274,12 +275,15 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
     color: colors.secondaryText,
     fontWeight: typography.weights.bold,
-    textTransform: 'uppercase'
+    textTransform: 'uppercase',
+    letterSpacing: 0.5
   },
   commRate: {
-    fontSize: typography.sizes.xxl,
+    fontSize: 24,
     fontWeight: typography.weights.bold,
     color: colors.primaryActionBlue,
+    fontVariant: ['tabular-nums'],
+    letterSpacing: -0.5,
     marginVertical: 2
   },
   commBasis: {
@@ -289,11 +293,12 @@ const styles = StyleSheet.create({
   commConfigureBtn: {
     backgroundColor: colors.primaryActionBlue,
     paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md + 2,
+    borderRadius: borderRadius.button,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4
+    gap: 4,
+    ...shadows.sm
   },
   commConfigureText: {
     color: colors.surface,
@@ -315,9 +320,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacing.xs,
+    paddingVertical: spacing.xs + 2,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceSubtle
+    borderBottomColor: colors.borderLight
   },
   statusLabel: {
     fontSize: typography.sizes.xs,
@@ -325,12 +330,12 @@ const styles = StyleSheet.create({
   },
   submitKycBtn: {
     backgroundColor: colors.subtleBlueBackground,
-    borderRadius: borderRadius.sm,
-    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.button,
+    paddingVertical: spacing.sm + 2,
     alignItems: 'center',
     marginTop: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: '#D4E4FC'
   },
   submitKycText: {
     fontSize: typography.sizes.xs,
@@ -340,9 +345,9 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: spacing.xs + 2,
+    paddingVertical: spacing.xs + 3,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceSubtle
+    borderBottomColor: colors.borderLight
   },
   infoKey: {
     fontSize: typography.sizes.xs,
@@ -354,13 +359,15 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.medium
   },
   logoutBtn: {
-    backgroundColor: colors.errorLight,
-    borderRadius: borderRadius.md,
+    backgroundColor: '#FDEEED',
+    borderRadius: borderRadius.button,
     paddingVertical: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.sm
+    marginTop: spacing.sm,
+    borderWidth: 1,
+    borderColor: '#FBD4D3'
   },
   logoutText: {
     color: colors.error,
@@ -378,10 +385,10 @@ const styles = StyleSheet.create({
     marginBottom: 4
   },
   modalInput: {
-    height: 44,
+    height: 46,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.input,
     paddingHorizontal: spacing.md,
     backgroundColor: colors.surface,
     fontSize: typography.sizes.sm,

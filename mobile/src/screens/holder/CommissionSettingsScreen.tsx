@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: spacing.md,
-    paddingBottom: spacing.huge
+    paddingBottom: 100
   },
   header: {
     marginBottom: spacing.md
@@ -157,7 +157,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: typography.sizes.lg,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+    color: colors.primaryNavy,
+    letterSpacing: -0.2
   },
   subtitle: {
     fontSize: typography.sizes.xs,
@@ -168,10 +169,10 @@ const styles = StyleSheet.create({
   historySection: {
     marginTop: spacing.xl,
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.cardLg,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     ...shadows.sm
   },
   historyHeader: {
@@ -195,10 +196,10 @@ const styles = StyleSheet.create({
   },
   historyCard: {
     backgroundColor: colors.surfaceSubtle,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.card,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     marginBottom: spacing.sm
   },
   historyRow: {
@@ -240,10 +241,10 @@ const styles = StyleSheet.create({
   },
   statutoryBox: {
     backgroundColor: colors.subtleBlueBackground,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
+    borderRadius: 20,
+    padding: spacing.md + 2,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#D4E4FC',
     marginTop: spacing.lg
   },
   statutoryTitle: {

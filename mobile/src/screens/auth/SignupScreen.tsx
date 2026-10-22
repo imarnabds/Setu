@@ -267,9 +267,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl
   },
   title: {
-    fontSize: typography.sizes.title,
+    fontSize: 26,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+    color: colors.primaryNavy,
+    letterSpacing: -0.3
   },
   subtitle: {
     fontSize: typography.sizes.sm,
@@ -279,19 +280,21 @@ const styles = StyleSheet.create({
   },
   formCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.cardLg,
     padding: spacing.xl,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     ...shadows.sm
   },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.errorLight,
+    backgroundColor: '#FDEEED',
     padding: spacing.md,
     borderRadius: borderRadius.md,
-    marginBottom: spacing.md
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: '#FBD4D3'
   },
   errorText: {
     color: colors.error,
@@ -302,9 +305,9 @@ const styles = StyleSheet.create({
   },
   roleLabel: {
     fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
+    fontWeight: typography.weights.bold,
     color: colors.primaryNavy,
-    marginBottom: spacing.xs
+    marginBottom: spacing.xs + 2
   },
   roleSelector: {
     flexDirection: 'row',
@@ -315,7 +318,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1.5,
     borderColor: colors.border,
-    borderRadius: borderRadius.md,
+    borderRadius: 18,
     padding: spacing.md,
     backgroundColor: colors.surface
   },
@@ -324,7 +327,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.subtleBlueBackground
   },
   roleIcon: {
-    marginBottom: spacing.xs
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surfaceSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xs + 2
   },
   roleTitle: {
     fontSize: typography.sizes.sm,
@@ -348,7 +357,7 @@ const styles = StyleSheet.create({
   checkbox: {
     width: 20,
     height: 20,
-    borderRadius: 4,
+    borderRadius: 6,
     borderWidth: 1.5,
     borderColor: colors.border,
     alignItems: 'center',

@@ -297,24 +297,25 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border
+    borderBottomColor: colors.borderLight
   },
   filterScroll: {
     flexDirection: 'row',
     gap: spacing.xs,
-    paddingBottom: spacing.sm
+    paddingBottom: spacing.sm,
+    marginTop: spacing.xs
   },
   filterChip: {
-    paddingVertical: 6,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.full,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: borderRadius.chip,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.surfaceSubtle
+    backgroundColor: colors.surface
   },
   filterChipActive: {
-    backgroundColor: colors.primaryNavy,
-    borderColor: colors.primaryNavy
+    backgroundColor: colors.primaryActionBlue,
+    borderColor: colors.primaryActionBlue
   },
   filterChipText: {
     fontSize: typography.sizes.xs,
@@ -323,13 +324,15 @@ const styles = StyleSheet.create({
   },
   filterChipTextActive: {
     color: colors.surface,
-    fontWeight: typography.weights.semibold
+    fontWeight: typography.weights.bold
   },
   sortRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: spacing.xs
+    paddingTop: spacing.xs + 2,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight
   },
   resultCount: {
     fontSize: typography.sizes.xs,
@@ -338,12 +341,12 @@ const styles = StyleSheet.create({
   },
   sortButtons: {
     flexDirection: 'row',
-    gap: 4
+    gap: 6
   },
   sortBtn: {
-    paddingVertical: 3,
-    paddingHorizontal: spacing.sm,
-    borderRadius: borderRadius.sm
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 14
   },
   sortBtnActive: {
     backgroundColor: colors.subtleBlueBackground
@@ -362,6 +365,6 @@ const styles = StyleSheet.create({
   },
   cardFeedContent: {
     padding: spacing.md,
-    paddingBottom: spacing.huge
+    paddingBottom: 100
   }
 });

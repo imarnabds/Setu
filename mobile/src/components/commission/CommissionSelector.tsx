@@ -244,19 +244,19 @@ export const CommissionSelector: React.FC<CommissionSelectorProps> = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.xl,
+    borderRadius: borderRadius.cardLg,
+    padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border,
     ...shadows.sm
   },
   displayCard: {
     backgroundColor: colors.surfaceSubtle,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.card,
     padding: spacing.lg,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     marginBottom: spacing.lg
   },
   displaySubtitle: {
@@ -277,16 +277,17 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   mainRateText: {
-    fontSize: typography.sizes.display,
+    fontSize: 34,
     fontWeight: typography.weights.bold,
     color: colors.primaryNavy,
-    fontVariant: ['tabular-nums']
+    fontVariant: ['tabular-nums'],
+    letterSpacing: -1
   },
   mainRateBadge: {
     fontSize: typography.sizes.xs,
     color: colors.primaryActionBlue,
     fontWeight: typography.weights.semibold,
-    marginTop: 2
+    marginTop: 4
   },
   stepBtn: {
     paddingVertical: spacing.sm,
@@ -294,7 +295,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.button,
     ...shadows.sm
   },
   stepBtnDisabled: {
@@ -309,7 +310,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.border,
+    backgroundColor: '#E2E8F0',
     overflow: 'hidden',
     marginTop: spacing.sm
   },
@@ -322,10 +323,10 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: spacing.xs
+    marginTop: spacing.xs + 2
   },
   trackLabelText: {
-    fontSize: 10,
+    fontSize: 11,
     color: colors.secondaryText,
     fontWeight: typography.weights.medium
   },
@@ -341,7 +342,7 @@ const styles = StyleSheet.create({
   helperText: {
     fontSize: typography.sizes.xs,
     color: colors.secondaryText,
-    lineHeight: 16,
+    lineHeight: 17,
     marginBottom: spacing.sm
   },
   chipsContainer: {
@@ -351,9 +352,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs
   },
   chip: {
-    paddingVertical: spacing.xs + 2,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.full,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: borderRadius.chip,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface
@@ -372,10 +373,10 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold
   },
   textInput: {
-    height: 46,
+    height: 48,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.input,
     paddingHorizontal: spacing.md,
     fontSize: typography.sizes.sm,
     color: colors.primaryText,
@@ -383,10 +384,10 @@ const styles = StyleSheet.create({
   },
   calcWidget: {
     backgroundColor: colors.subtleBlueBackground,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
+    borderRadius: borderRadius.card,
+    padding: spacing.md + 2,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#D4E4FC',
     marginBottom: spacing.lg
   },
   calcHeader: {
@@ -397,7 +398,7 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
     color: colors.primaryNavy,
-    marginLeft: 6
+    marginLeft: 8
   },
   calcDesc: {
     fontSize: typography.sizes.xs,
@@ -410,9 +411,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: borderRadius.sm,
-    paddingHorizontal: spacing.sm,
-    marginVertical: spacing.sm
+    borderRadius: borderRadius.input,
+    paddingHorizontal: spacing.md,
+    marginVertical: spacing.sm,
+    height: 44
   },
   calcCurrency: {
     fontSize: typography.sizes.md,
@@ -425,24 +427,25 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.base,
     fontWeight: typography.weights.bold,
     color: colors.primaryNavy,
-    marginLeft: 4
+    marginLeft: 6
   },
   calcBaseLabel: {
     fontSize: typography.sizes.xs,
-    color: colors.secondaryText
+    color: colors.secondaryText,
+    fontWeight: typography.weights.medium
   },
   calcResultBox: {
     backgroundColor: colors.surface,
     padding: spacing.md,
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: colors.borderLight
   },
   calcResultRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4
+    marginBottom: 6
   },
   calcResultLabel: {
     fontSize: typography.sizes.xs,
@@ -451,18 +454,20 @@ const styles = StyleSheet.create({
   calcResultValue: {
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.medium,
-    color: colors.primaryNavy
+    color: colors.primaryNavy,
+    fontVariant: ['tabular-nums']
   },
   calcResultHighlight: {
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
-    color: colors.primaryActionBlue
+    color: colors.primaryActionBlue,
+    fontVariant: ['tabular-nums']
   },
   calcTotalRow: {
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: 6,
-    marginTop: 4,
+    borderTopColor: colors.borderLight,
+    paddingTop: 8,
+    marginTop: 6,
     marginBottom: 0
   },
   calcTotalLabel: {
@@ -473,13 +478,14 @@ const styles = StyleSheet.create({
   calcTotalValue: {
     fontSize: typography.sizes.md,
     fontWeight: typography.weights.bold,
-    color: colors.success
+    color: colors.primaryActionBlue,
+    fontVariant: ['tabular-nums']
   },
   statutoryDisclaimer: {
     fontSize: 10,
     color: colors.secondaryText,
     marginTop: spacing.sm,
-    lineHeight: 14
+    lineHeight: 15
   },
   actionsRow: {
     flexDirection: 'row',

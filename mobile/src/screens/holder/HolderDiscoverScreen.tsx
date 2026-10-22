@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     padding: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border
+    borderBottomColor: colors.borderLight
   },
   countText: {
     fontSize: typography.sizes.xs,
@@ -137,15 +137,15 @@ const styles = StyleSheet.create({
   },
   feedContent: {
     padding: spacing.md,
-    paddingBottom: spacing.huge
+    paddingBottom: 100
   },
   investorCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.card,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     ...shadows.sm
   },
   topRow: {
@@ -153,13 +153,14 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   info: {
-    marginLeft: spacing.sm,
+    marginLeft: spacing.md,
     flex: 1
   },
   name: {
     fontSize: typography.sizes.base,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+    color: colors.primaryNavy,
+    letterSpacing: -0.2
   },
   location: {
     fontSize: typography.sizes.xs,
@@ -180,9 +181,9 @@ const styles = StyleSheet.create({
   },
   chip: {
     backgroundColor: colors.surfaceSubtle,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: borderRadius.sm,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border
   },

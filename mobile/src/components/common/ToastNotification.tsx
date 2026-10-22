@@ -94,11 +94,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.chip,
     marginBottom: spacing.sm,
     width: '100%',
     maxWidth: 420,
-    ...shadows.md
+    ...shadows.floating
   },
   toastText: {
     flex: 1,
@@ -113,13 +113,13 @@ const styles = StyleSheet.create({
   },
   offlineBanner: {
     backgroundColor: colors.warningLight,
-    paddingVertical: spacing.xs,
+    paddingVertical: spacing.xs + 2,
     paddingHorizontal: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: colors.border
+    borderBottomColor: colors.borderLight
   },
   offlineText: {
     fontSize: typography.sizes.xs,
@@ -147,9 +147,10 @@ const styles = StyleSheet.create({
   },
   retryButton: {
     paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.xl,
     backgroundColor: colors.primaryActionBlue,
-    borderRadius: borderRadius.sm
+    borderRadius: borderRadius.button,
+    ...shadows.sm
   },
   retryText: {
     color: colors.surface,

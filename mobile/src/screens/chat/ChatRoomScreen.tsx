@@ -40,7 +40,7 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({
   const [blockModalOpen, setBlockModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<any>(null);
 
   const fetchConnectionAndMessages = async () => {
     try {
@@ -299,10 +299,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background
   },
   topBar: {
-    height: 60,
+    height: 64,
     backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: colors.borderLight,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
     flex: 1
   },
   nameCol: {
-    marginLeft: spacing.sm,
+    marginLeft: spacing.sm + 2,
     flex: 1
   },
   nameRow: {
@@ -328,7 +328,8 @@ const styles = StyleSheet.create({
   partnerName: {
     fontSize: typography.sizes.base,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+    color: colors.primaryNavy,
+    letterSpacing: -0.2
   },
   vBadge: {
     backgroundColor: colors.success,
@@ -337,27 +338,35 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 4
+    marginLeft: 5
   },
   partnerSub: {
     fontSize: 11,
-    color: colors.secondaryText
+    color: colors.secondaryText,
+    marginTop: 1
   },
   headerActions: {
     flexDirection: 'row',
     gap: spacing.sm
   },
   actionIcon: {
-    padding: spacing.xs
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.surfaceSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.borderLight
   },
   pinnedTermsBanner: {
     backgroundColor: colors.subtleBlueBackground,
-    paddingVertical: 6,
+    paddingVertical: 8,
     paddingHorizontal: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: colors.border
+    borderBottomColor: '#D4E4FC'
   },
   pinnedTermsText: {
     fontSize: 11,
@@ -370,17 +379,17 @@ const styles = StyleSheet.create({
   },
   securityBanner: {
     backgroundColor: colors.surfaceSubtle,
-    paddingVertical: 4,
+    paddingVertical: 5,
     paddingHorizontal: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: colors.border
+    borderBottomColor: colors.borderLight
   },
   securityText: {
     fontSize: 10,
     color: colors.secondaryText,
-    marginLeft: 4,
+    marginLeft: 6,
     flex: 1
   },
   messageList: {

@@ -167,27 +167,27 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: spacing.xl,
-    paddingBottom: spacing.huge
+    paddingBottom: 40
   },
   heroSection: {
     alignItems: 'center',
-    marginVertical: spacing.xl
+    marginVertical: spacing.lg
   },
   logoBadge: {
-    width: 72,
-    height: 72,
-    borderRadius: borderRadius.xl,
-    backgroundColor: colors.primaryNavy,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: colors.primaryActionBlue,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
     ...shadows.md
   },
   productTitle: {
-    fontSize: typography.sizes.display,
+    fontSize: 28,
     fontWeight: typography.weights.bold,
     color: colors.primaryNavy,
-    letterSpacing: 0.5
+    letterSpacing: -0.5
   },
   tagline: {
     fontSize: typography.sizes.sm,
@@ -209,10 +209,10 @@ const styles = StyleSheet.create({
   },
   featuresCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.cardLg,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     marginBottom: spacing.xl,
     ...shadows.sm
   },
@@ -222,13 +222,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md
   },
   featureIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.surfaceSubtle,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.subtleBlueBackground,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.md
+    marginRight: spacing.md,
+    borderWidth: 1,
+    borderColor: '#D4E4FC'
   },
   featureText: {
     flex: 1
@@ -241,7 +243,7 @@ const styles = StyleSheet.create({
   featureDesc: {
     fontSize: typography.sizes.xs,
     color: colors.secondaryText,
-    lineHeight: 16,
+    lineHeight: 17,
     marginTop: 2
   },
   actionSection: {
@@ -249,17 +251,17 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl
   },
   primaryBtn: {
-    height: 52
+    height: 50
   },
   secondaryBtn: {
-    height: 52
+    height: 50
   },
   demoSection: {
     backgroundColor: colors.subtleBlueBackground,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.card,
     padding: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#D4E4FC',
     marginBottom: spacing.xl
   },
   demoTitle: {
@@ -282,17 +284,17 @@ const styles = StyleSheet.create({
   demoBtn: {
     flex: 1,
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
+    borderRadius: 16,
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.xs,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     ...shadows.sm
   },
   demoBtnHolder: {
     borderTopWidth: 3,
-    borderTopColor: colors.primaryNavy
+    borderTopColor: colors.primaryActionBlue
   },
   demoBtnAdmin: {
     borderTopWidth: 3,

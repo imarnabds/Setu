@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
-import { borderRadius, spacing } from '../../theme/spacing';
+import { borderRadius, spacing, shadows } from '../../theme/spacing';
 import { Icon } from './Icon';
 import { PrimaryButton } from './PrimaryButton';
 
@@ -64,39 +64,43 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     backgroundColor: colors.subtleBlueBackground,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: '#D4E4FC'
   },
   title: {
     fontSize: typography.sizes.lg,
     fontWeight: typography.weights.bold,
     color: colors.primaryNavy,
     textAlign: 'center',
-    marginBottom: spacing.xs
+    marginBottom: spacing.xs,
+    letterSpacing: -0.2
   },
   description: {
     fontSize: typography.sizes.sm,
     color: colors.secondaryText,
     textAlign: 'center',
     lineHeight: 20,
-    maxWidth: 280,
+    maxWidth: 290,
     marginBottom: spacing.lg
   },
   actionButton: {
-    minWidth: 160
+    minWidth: 180
   },
   skeletonContainer: {
     backgroundColor: colors.surface,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
+    padding: spacing.md + 2,
+    borderRadius: borderRadius.card,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: colors.borderLight,
+    ...shadows.sm
   },
   skeletonRow: {
     flexDirection: 'row',

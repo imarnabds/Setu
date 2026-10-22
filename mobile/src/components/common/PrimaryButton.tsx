@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
-import { borderRadius, spacing } from '../../theme/spacing';
+import { borderRadius, spacing, shadows } from '../../theme/spacing';
 import { Icon } from './Icon';
 
 interface PrimaryButtonProps {
@@ -37,25 +37,26 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
     if (disabled) return colors.border;
     switch (variant) {
       case 'navy':
-        return colors.primaryNavy;
+        return colors.deepNavy;
       case 'danger':
         return colors.error;
       case 'success':
         return colors.success;
       case 'blue':
       default:
-        return colors.primaryActionBlue;
+        return colors.primaryBlue;
     }
   };
 
   return (
     <TouchableOpacity
-      activeOpacity={0.85}
+      activeOpacity={0.88}
       onPress={onPress}
       disabled={disabled || loading}
       style={[
         styles.button,
         { backgroundColor: getBackgroundColor() },
+        !disabled && styles.buttonShadow,
         style
       ]}
     >
@@ -89,14 +90,18 @@ export const PrimaryButton: React.FC<PrimaryButtonProps> = ({
 const styles = StyleSheet.create({
   button: {
     height: 48,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.button,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.xl
   },
+  buttonShadow: {
+    ...shadows.sm
+  },
   text: {
     fontSize: typography.sizes.base,
-    fontWeight: typography.weights.semibold
+    fontWeight: typography.weights.semibold,
+    letterSpacing: 0.1
   }
 });

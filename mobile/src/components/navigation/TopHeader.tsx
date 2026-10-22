@@ -4,6 +4,7 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { borderRadius, spacing, shadows } from '../../theme/spacing';
 import { Icon } from '../common/Icon';
+import { ProfileAvatar } from '../common/ProfileAvatar';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 
@@ -26,15 +27,22 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
   } = useUIStore();
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
 
+  const getGreeting = () => {
+    const hours = new Date().getHours();
+    if (hours < 12) return 'Good morning';
+    if (hours < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
   const getRoleBadge = () => {
     switch (activeRole) {
       case 'demat_holder':
-        return { label: 'Holder View', color: colors.primaryNavy, bg: colors.surfaceSubtle };
+        return { label: 'Holder', color: colors.deepNavy, bg: colors.surfaceHighlight };
       case 'admin':
-        return { label: 'Compliance Admin', color: colors.error, bg: colors.errorLight };
+        return { label: 'Admin', color: colors.error, bg: colors.errorLight };
       case 'investor':
       default:
-        return { label: 'Investor View', color: colors.primaryActionBlue, bg: colors.subtleBlueBackground };
+        return { label: 'Investor', color: colors.primaryBlue, bg: colors.surfaceHighlight };
     }
   };
 
@@ -45,16 +53,21 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
       <View style={styles.leftContainer}>
         {showBack ? (
           <TouchableOpacity onPress={onBack} style={styles.backButton}>
-            <Icon name="chevron-left" size={24} color={colors.primaryNavy} />
+            <Icon name="chevron-left" size={24} color={colors.deepNavy} />
           </TouchableOpacity>
         ) : (
-          <View style={styles.brandRow}>
-            <View style={styles.brandLogo}>
-              <Text style={styles.brandLetter}>I</Text>
-            </View>
-            <View>
-              <Text style={styles.brandName}>IPO CONNECT</Text>
-              <Text style={styles.brandTagline}>Investor & Demat Network</Text>
+          <View style={styles.userProfileRow}>
+            <ProfileAvatar
+              name={user?.fullName || 'User'}
+              avatarUrl={user?.avatarUrl}
+              size={40}
+              isVerified={user?.isKycVerified}
+            />
+            <View style={styles.greetingCol}>
+              <Text style={styles.greetingText}>{getGreeting()}</Text>
+              <Text style={styles.userName} numberOfLines={1}>
+                {user?.fullName || 'IPO Connect'}
+              </Text>
             </View>
           </View>
         )}
@@ -68,16 +81,16 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
           style={[styles.rolePill, { backgroundColor: badge.bg }]}
         >
           <Text style={[styles.roleText, { color: badge.color }]}>{badge.label}</Text>
-          <Icon name="sliders" size={12} color={badge.color} />
+          <Icon name="sliders" size={11} color={badge.color} />
         </TouchableOpacity>
 
-        {/* Notifications Icon */}
+        {/* Circular Notification Bell */}
         <TouchableOpacity
-          activeOpacity={0.7}
+          activeOpacity={0.8}
           onPress={() => setNotificationsOpen(true)}
-          style={styles.notifBtn}
+          style={styles.notifCircle}
         >
-          <Icon name="bell" size={20} color={colors.primaryNavy} />
+          <Icon name="bell" size={18} color={colors.deepNavy} />
           {unreadNotificationsCount > 0 && (
             <View style={styles.notifBadge}>
               <Text style={styles.notifBadgeText}>
@@ -103,7 +116,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Role & Experience Switcher</Text>
             <Text style={styles.modalDesc}>
-              Preview and evaluate how IPO CONNECT looks and behaves for each platform role:
+              Preview how IPO CONNECT functions across each user journey:
             </Text>
 
             <TouchableOpacity
@@ -118,12 +131,12 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
               }}
             >
               <View style={styles.roleIcon}>
-                <Icon name="user" size={18} color={colors.primaryActionBlue} />
+                <Icon name="user" size={18} color={colors.primaryBlue} />
               </View>
               <View style={styles.roleInfo}>
                 <Text style={styles.roleOptionTitle}>Individual Investor</Text>
                 <Text style={styles.roleOptionSub}>
-                  Browse Demat holders, send Pokes, view published terms, chat after acceptance.
+                  Browse Demat holders, send Pokes, view published terms, chat upon acceptance.
                 </Text>
               </View>
             </TouchableOpacity>
@@ -140,12 +153,12 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
               }}
             >
               <View style={styles.roleIcon}>
-                <Icon name="shield" size={18} color={colors.primaryNavy} />
+                <Icon name="shield" size={18} color={colors.deepNavy} />
               </View>
               <View style={styles.roleInfo}>
                 <Text style={styles.roleOptionTitle}>Demat Account Holder</Text>
                 <Text style={styles.roleOptionSub}>
-                  Configure 0-50% commission, receive & accept/reject Pokes, manage connections.
+                  Configure 0–50% commission, receive & accept/reject Pokes, manage connections.
                 </Text>
               </View>
             </TouchableOpacity>
@@ -187,52 +200,49 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
 
 const styles = StyleSheet.create({
   header: {
-    height: 58,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    height: 64,
+    backgroundColor: 'transparent',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    ...shadows.sm
+    paddingHorizontal: spacing.lg,
+    paddingTop: 4
   },
   leftContainer: {
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
+    flex: 1
   },
   backButton: {
-    padding: spacing.xs,
-    marginRight: spacing.xs
-  },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  brandLogo: {
-    width: 32,
-    height: 32,
-    borderRadius: borderRadius.sm,
-    backgroundColor: colors.primaryNavy,
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.sm
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.sm
   },
-  brandLetter: {
-    color: colors.surface,
-    fontSize: typography.sizes.md,
-    fontWeight: typography.weights.bold
+  userProfileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1
   },
-  brandName: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
-    color: colors.primaryNavy,
-    letterSpacing: 0.5
+  greetingCol: {
+    marginLeft: spacing.sm,
+    flex: 1
   },
-  brandTagline: {
-    fontSize: 9,
+  greetingText: {
+    fontSize: typography.sizes.xs,
     color: colors.secondaryText,
     fontWeight: typography.weights.medium
+  },
+  userName: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.deepNavy,
+    letterSpacing: -0.2
   },
   rightContainer: {
     flexDirection: 'row',
@@ -243,26 +253,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 5,
-    paddingHorizontal: spacing.sm,
-    borderRadius: borderRadius.full,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.chip,
     gap: 4
   },
   roleText: {
     fontSize: typography.sizes.xs,
     fontWeight: typography.weights.semibold
   },
-  notifBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  notifCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative'
+    position: 'relative',
+    ...shadows.sm
   },
   notifBadge: {
     position: 'absolute',
-    top: 4,
-    right: 4,
+    top: 3,
+    right: 3,
     backgroundColor: colors.error,
     borderRadius: 7,
     minWidth: 14,
@@ -287,14 +301,14 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 420,
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.cardLg,
     padding: spacing.xl,
     ...shadows.lg
   },
   modalTitle: {
     fontSize: typography.sizes.lg,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy,
+    color: colors.deepNavy,
     marginBottom: spacing.xs
   },
   modalDesc: {
@@ -307,20 +321,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.md,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: spacing.sm,
     backgroundColor: colors.surface
   },
   roleOptionActive: {
-    borderColor: colors.primaryActionBlue,
-    backgroundColor: colors.subtleBlueBackground
+    borderColor: colors.primaryBlue,
+    backgroundColor: colors.softBlueHighlight
   },
   roleIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: borderRadius.full,
     backgroundColor: colors.surfaceSubtle,
     alignItems: 'center',
     justifyContent: 'center',
@@ -332,7 +346,7 @@ const styles = StyleSheet.create({
   roleOptionTitle: {
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+    color: colors.deepNavy
   },
   roleOptionSub: {
     fontSize: 11,

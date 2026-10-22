@@ -184,7 +184,8 @@ const styles = StyleSheet.create({
   name: {
     fontSize: typography.sizes.lg,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
+    color: colors.primaryNavy,
+    letterSpacing: -0.2
   },
   verifiedBadge: {
     backgroundColor: colors.success,
@@ -210,10 +211,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     backgroundColor: colors.surfaceSubtle,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.card,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     marginBottom: spacing.lg
   },
   vIcon: {
@@ -242,15 +243,15 @@ const styles = StyleSheet.create({
     fontWeight: typography.weights.bold,
     color: colors.primaryNavy,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
     marginBottom: spacing.xs
   },
   termsBox: {
     backgroundColor: colors.subtleBlueBackground,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
+    borderRadius: 20,
+    padding: spacing.md + 2,
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: '#D4E4FC'
   },
   rateRow: {
     flexDirection: 'row',
@@ -258,9 +259,11 @@ const styles = StyleSheet.create({
     marginBottom: 4
   },
   rateHighlight: {
-    fontSize: typography.sizes.xxl,
+    fontSize: 28,
     fontWeight: typography.weights.bold,
-    color: colors.primaryActionBlue
+    color: colors.primaryActionBlue,
+    fontVariant: ['tabular-nums'],
+    letterSpacing: -0.5
   },
   rateUnit: {
     fontSize: typography.sizes.xs,
@@ -293,9 +296,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-    borderRadius: borderRadius.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: borderRadius.chip,
     borderWidth: 1,
     borderColor: colors.border
   },
@@ -303,7 +306,7 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
     color: colors.primaryNavy,
     fontWeight: typography.weights.medium,
-    marginLeft: 4
+    marginLeft: 6
   },
   langText: {
     fontSize: typography.sizes.sm,
@@ -311,10 +314,10 @@ const styles = StyleSheet.create({
   },
   safetyNotice: {
     backgroundColor: colors.surfaceSubtle,
-    borderRadius: borderRadius.md,
+    borderRadius: 20,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     marginBottom: spacing.xl
   },
   safetyTitle: {
