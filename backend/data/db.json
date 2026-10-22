@@ -1,0 +1,358 @@
+{
+  "users": [
+    {
+      "id": "usr_holder_rajesh",
+      "fullName": "Rajesh Sharma",
+      "email": "rajesh.sharma@demat.in",
+      "mobileNumber": "+91 98201 12345",
+      "password": "$2b$10$T7YAO0O1GU/uE4JvQqpBvOAmZAIrWijFY/b.uZZ2LQbhhNOsvdvRO",
+      "primaryRole": "demat_holder",
+      "isEmailVerified": true,
+      "isMobileVerified": true,
+      "isKycVerified": true,
+      "kycDetails": {
+        "documentType": "PAN & NSDL Demat Statement",
+        "documentNumberMasked": "XXXX-XXXX-3412",
+        "submittedAt": "2026-10-20T08:25:40.307Z",
+        "status": "verified",
+        "verifiedAt": "2026-10-21T08:25:40.307Z",
+        "notes": "Verified against NSDL/CDSL registry benchmark"
+      },
+      "avatarUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80",
+      "city": "Mumbai",
+      "region": "Maharashtra",
+      "bio": "Active Demat account holder with 6+ years in Indian primary markets. Specializes in Mainboard & SME IPO allocation workflows and cut-off price strategies.",
+      "investmentExperience": "6+ Years Experience",
+      "preferredLanguage": "English, Hindi, Marathi",
+      "supportedCategories": [
+        "Mainboard IPO",
+        "SME IPO",
+        "Retail Bidding Strategy",
+        "Cut-Off Price Guidance"
+      ],
+      "defaultCommissionRate": 5,
+      "commissionBasis": "Documented Advisory & Technical Assistance Base Fee",
+      "isAvailable": true,
+      "createdAt": "2026-10-20T08:25:40.307Z",
+      "updatedAt": "2026-10-22T08:26:06.830Z",
+      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c3JfaG9sZGVyX3JhamVzaCIsImlhdCI6MTc5MjY1NzU2NiwiZXhwIjoxNzkzMjYyMzY2fQ.KqVqz5OlfCdE6ggPbxNHB30YAMK7W-YWwQ5Ba7sjf8M"
+    },
+    {
+      "id": "usr_holder_priya",
+      "fullName": "Priya Patel",
+      "email": "priya.patel@demat.in",
+      "mobileNumber": "+91 98791 54321",
+      "password": "$2b$10$T7YAO0O1GU/uE4JvQqpBvOAmZAIrWijFY/b.uZZ2LQbhhNOsvdvRO",
+      "primaryRole": "demat_holder",
+      "isEmailVerified": true,
+      "isMobileVerified": true,
+      "isKycVerified": true,
+      "kycDetails": {
+        "documentType": "PAN & CDSL Demat Statement",
+        "documentNumberMasked": "XXXX-XXXX-9876",
+        "submittedAt": "2026-10-20T08:25:40.307Z",
+        "status": "verified",
+        "verifiedAt": "2026-10-21T08:25:40.307Z",
+        "notes": "Verified Demat ownership and KYC credentials"
+      },
+      "avatarUrl": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&auto=format&fit=crop&q=80",
+      "city": "Ahmedabad",
+      "region": "Gujarat",
+      "bio": "Passionate financial researcher and active retail IPO applicant. Focused on transparent compliance, category eligibility, and timetable tracking.",
+      "investmentExperience": "4 Years Experience",
+      "preferredLanguage": "English, Hindi, Gujarati",
+      "supportedCategories": [
+        "Mainboard IPO",
+        "Retail Application Strategy",
+        "HNI Allocation Assistance"
+      ],
+      "defaultCommissionRate": 7.5,
+      "commissionBasis": "Fixed Advisory Service Fee Base",
+      "isAvailable": true,
+      "createdAt": "2026-10-20T08:25:40.307Z",
+      "updatedAt": "2026-10-21T08:25:40.307Z"
+    },
+    {
+      "id": "usr_holder_vikram",
+      "fullName": "Vikram Mehta",
+      "email": "vikram.mehta@demat.in",
+      "mobileNumber": "+91 99000 88776",
+      "password": "$2b$10$T7YAO0O1GU/uE4JvQqpBvOAmZAIrWijFY/b.uZZ2LQbhhNOsvdvRO",
+      "primaryRole": "demat_holder",
+      "isEmailVerified": true,
+      "isMobileVerified": true,
+      "isKycVerified": false,
+      "kycDetails": {
+        "documentType": "PAN Card & Broker Holding Sheet",
+        "documentNumberMasked": "XXXX-XXXX-4433",
+        "submittedAt": "2026-10-21T08:25:40.307Z",
+        "status": "pending",
+        "notes": "Under review by compliance officer"
+      },
+      "avatarUrl": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80",
+      "city": "Bengaluru",
+      "region": "Karnataka",
+      "bio": "Tech professional and long-time investor. Offering friendly guidance on UPI mandate approvals and allotment probability checks.",
+      "investmentExperience": "3 Years Experience",
+      "preferredLanguage": "English, Kannada, Hindi",
+      "supportedCategories": [
+        "Mainboard IPO",
+        "UPI Mandate Troubleshooting",
+        "Bid Modification Support"
+      ],
+      "defaultCommissionRate": 2.5,
+      "commissionBasis": "Technical Consultation Base Fee",
+      "isAvailable": true,
+      "createdAt": "2026-10-21T08:25:40.307Z",
+      "updatedAt": "2026-10-21T08:25:40.307Z"
+    },
+    {
+      "id": "usr_investor_arjun",
+      "fullName": "Arjun Kapoor",
+      "email": "arjun.kapoor@investor.in",
+      "mobileNumber": "+91 98210 65432",
+      "password": "$2b$10$T7YAO0O1GU/uE4JvQqpBvOAmZAIrWijFY/b.uZZ2LQbhhNOsvdvRO",
+      "primaryRole": "investor",
+      "isEmailVerified": true,
+      "isMobileVerified": true,
+      "isKycVerified": true,
+      "kycDetails": {
+        "documentType": "Aadhaar & PAN",
+        "documentNumberMasked": "XXXX-XXXX-7721",
+        "submittedAt": "2026-10-20T08:25:40.307Z",
+        "status": "verified",
+        "verifiedAt": "2026-10-21T08:25:40.307Z"
+      },
+      "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
+      "city": "Pune",
+      "region": "Maharashtra",
+      "bio": "Individual retail investor looking to connect with reliable Demat holders for IPO allotment insights and bidding strategies.",
+      "investmentExperience": "1-2 Years",
+      "preferredLanguage": "English, Hindi",
+      "supportedCategories": [
+        "Mainboard IPO",
+        "Retail Application Strategy"
+      ],
+      "defaultCommissionRate": 0,
+      "commissionBasis": "Client Investor",
+      "isAvailable": true,
+      "createdAt": "2026-10-20T08:25:40.307Z",
+      "updatedAt": "2026-10-22T09:14:11.099Z",
+      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c3JfaW52ZXN0b3JfYXJqdW4iLCJpYXQiOjE3OTI2NjA0NTEsImV4cCI6MTc5MzI2NTI1MX0.9oBp5azEhkWDPZpaUoW7duE81nEin6kpKbOeSXulSo8"
+    },
+    {
+      "id": "usr_investor_neha",
+      "fullName": "Neha Verma",
+      "email": "neha.verma@investor.in",
+      "mobileNumber": "+91 98110 33221",
+      "password": "$2b$10$T7YAO0O1GU/uE4JvQqpBvOAmZAIrWijFY/b.uZZ2LQbhhNOsvdvRO",
+      "primaryRole": "investor",
+      "isEmailVerified": true,
+      "isMobileVerified": true,
+      "isKycVerified": false,
+      "kycDetails": {
+        "documentType": "PAN Card",
+        "documentNumberMasked": "XXXX-XXXX-1199",
+        "submittedAt": "2026-10-21T08:25:40.307Z",
+        "status": "pending"
+      },
+      "avatarUrl": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80",
+      "city": "New Delhi",
+      "region": "Delhi NCR",
+      "bio": "First-time IPO enthusiast eager to learn lawful application practices and how to avoid mandate rejections.",
+      "investmentExperience": "Beginner",
+      "preferredLanguage": "English, Hindi",
+      "supportedCategories": [
+        "Mainboard IPO"
+      ],
+      "defaultCommissionRate": 0,
+      "commissionBasis": "Client Investor",
+      "isAvailable": true,
+      "createdAt": "2026-10-21T08:25:40.307Z",
+      "updatedAt": "2026-10-21T08:25:40.307Z"
+    },
+    {
+      "id": "usr_admin_compliance",
+      "fullName": "Compliance & Verification Desk",
+      "email": "compliance.admin@ipoconnect.in",
+      "mobileNumber": "+91 99999 00000",
+      "password": "$2b$10$xovkGSK4qK25t3JRErWpmuX5WtAr7pwj0SNOz5OD2fUDJGhgoh7AG",
+      "primaryRole": "admin",
+      "isEmailVerified": true,
+      "isMobileVerified": true,
+      "isKycVerified": true,
+      "avatarUrl": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&auto=format&fit=crop&q=80",
+      "city": "Mumbai",
+      "region": "Maharashtra",
+      "bio": "IPO CONNECT Official Compliance & Audit Administrator",
+      "supportedCategories": [
+        "Platform Compliance",
+        "KYC Review",
+        "Security Audit"
+      ],
+      "defaultCommissionRate": 0,
+      "commissionBasis": "Platform Administration",
+      "isAvailable": true,
+      "createdAt": "2026-10-20T08:25:40.307Z",
+      "updatedAt": "2026-10-21T08:25:40.307Z"
+    }
+  ],
+  "pokes": [
+    {
+      "id": "poke_arjun_to_rajesh",
+      "senderId": "usr_investor_arjun",
+      "recipientId": "usr_holder_rajesh",
+      "senderRole": "investor",
+      "recipientRole": "demat_holder",
+      "status": "accepted",
+      "proposedCommissionRate": 5,
+      "commissionBasis": "Documented Advisory & Technical Assistance Base Fee",
+      "message": "Hi Rajesh, I noticed your extensive experience with SME IPO cut-off strategies. Would love to connect and discuss lawful assistance for the upcoming tech IPO.",
+      "agreedCommissionRate": 5,
+      "agreedCommissionBasis": "Documented Advisory & Technical Assistance Base Fee",
+      "acceptedAt": "2026-10-21T08:25:40.307Z",
+      "createdAt": "2026-10-20T08:25:40.307Z",
+      "updatedAt": "2026-10-21T08:25:40.307Z"
+    },
+    {
+      "id": "poke_neha_to_rajesh",
+      "senderId": "usr_investor_neha",
+      "recipientId": "usr_holder_rajesh",
+      "senderRole": "investor",
+      "recipientRole": "demat_holder",
+      "status": "pending",
+      "proposedCommissionRate": 5,
+      "commissionBasis": "Documented Advisory & Technical Assistance Base Fee",
+      "message": "Hello Mr. Sharma, I am preparing for my first Mainboard IPO application and would appreciate your technical guidance.",
+      "createdAt": "2026-10-21T08:25:40.307Z",
+      "updatedAt": "2026-10-21T08:25:40.307Z"
+    },
+    {
+      "id": "poke_arjun_to_priya",
+      "senderId": "usr_investor_arjun",
+      "recipientId": "usr_holder_priya",
+      "senderRole": "investor",
+      "recipientRole": "demat_holder",
+      "status": "pending",
+      "proposedCommissionRate": 7.5,
+      "commissionBasis": "Fixed Advisory Service Fee Base",
+      "message": "Hi Priya, interested in your HNI allocation assistance parameters. Looking forward to connecting!",
+      "createdAt": "2026-10-21T08:25:40.307Z",
+      "updatedAt": "2026-10-21T08:25:40.307Z"
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_rajesh_arjun",
+      "userAId": "usr_holder_rajesh",
+      "userBId": "usr_investor_arjun",
+      "pokeRequestId": "poke_arjun_to_rajesh",
+      "agreedCommissionRate": 5,
+      "agreedCommissionBasis": "Documented Advisory & Technical Assistance Base Fee",
+      "status": "active",
+      "createdAt": "2026-10-21T08:25:40.307Z",
+      "updatedAt": "2026-10-22T08:25:40.306Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg_sys_1",
+      "connectionId": "conn_rajesh_arjun",
+      "senderId": "system",
+      "receiverId": "usr_investor_arjun",
+      "content": "🤝 Connection established! Agreed terms: 5.0% on [Documented Advisory & Technical Assistance Base Fee]. Compliance Reminder: All IPO applications must use authorized channels (ASBA/UPI/Broker). Never share trading credentials, bank OTPs, or UPI PINs.",
+      "type": "system",
+      "metadata": {
+        "agreedRate": 5,
+        "basis": "Documented Advisory & Technical Assistance Base Fee"
+      },
+      "createdAt": "2026-10-21T08:25:40.307Z",
+      "readAt": "2026-10-22T09:15:55.765Z"
+    },
+    {
+      "id": "msg_txt_2",
+      "connectionId": "conn_rajesh_arjun",
+      "senderId": "usr_investor_arjun",
+      "receiverId": "usr_holder_rajesh",
+      "content": "Hello Rajesh! Thank you for accepting my Poke request. I am looking at the upcoming solar manufacturing IPO.",
+      "type": "text",
+      "createdAt": "2026-10-21T08:25:40.307Z"
+    },
+    {
+      "id": "msg_txt_3",
+      "connectionId": "conn_rajesh_arjun",
+      "senderId": "usr_holder_rajesh",
+      "receiverId": "usr_investor_arjun",
+      "content": "Glad to connect, Arjun! That issue has strong institutional interest. I can guide you on retail price band cut-offs and how to confirm UPI mandate approval on time.",
+      "type": "text",
+      "createdAt": "2026-10-21T08:25:40.307Z",
+      "readAt": "2026-10-22T09:15:55.765Z"
+    }
+  ],
+  "commissionHistories": [
+    {
+      "id": "ch_hist_1",
+      "holderId": "usr_holder_rajesh",
+      "previousRate": 2.5,
+      "newRate": 5,
+      "basis": "Documented Advisory & Technical Assistance Base Fee",
+      "changedById": "usr_holder_rajesh",
+      "reason": "Adjusted default published advisory rate for upcoming financial year",
+      "timestamp": "2026-10-21T08:25:40.307Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif_1",
+      "userId": "usr_holder_rajesh",
+      "title": "New Poke Received",
+      "message": "Neha Verma sent you a Poke request. Review their profile to accept or decline.",
+      "type": "poke_received",
+      "referenceId": "poke_neha_to_rajesh",
+      "isRead": false,
+      "createdAt": "2026-10-21T08:25:40.307Z"
+    },
+    {
+      "id": "notif_2",
+      "userId": "usr_investor_arjun",
+      "title": "Poke Accepted!",
+      "message": "Rajesh Sharma accepted your Poke! Private chat is now active.",
+      "type": "poke_accepted",
+      "referenceId": "conn_rajesh_arjun",
+      "isRead": true,
+      "createdAt": "2026-10-21T08:25:40.307Z"
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "aud_seed_1",
+      "actorId": "usr_admin_compliance",
+      "action": "PLATFORM_INITIALIZED",
+      "details": {
+        "environment": "production-ready",
+        "seeded": true
+      },
+      "timestamp": "2026-10-20T08:25:40.307Z"
+    },
+    {
+      "id": "aud_mvja1373",
+      "actorId": "usr_holder_rajesh",
+      "action": "USER_LOGIN",
+      "details": {
+        "role": "demat_holder"
+      },
+      "ipAddress": "::1",
+      "timestamp": "2026-10-22T08:26:06.831Z"
+    },
+    {
+      "id": "aud_mvjbqwpp",
+      "actorId": "usr_investor_arjun",
+      "action": "USER_LOGIN",
+      "details": {
+        "role": "investor"
+      },
+      "ipAddress": "::1",
+      "timestamp": "2026-10-22T09:14:11.101Z"
+    }
+  ]
+}
