@@ -20,13 +20,17 @@ import { useUIStore } from './src/store/uiStore';
 
 // Common Components
 import { TopHeader } from './src/components/navigation/TopHeader';
+import { IpoDropdownBar } from './src/components/navigation/IpoDropdownBar';
 import { BottomNavigation } from './src/components/navigation/BottomNavigation';
 import { ToastNotificationContainer } from './src/components/common/ToastNotification';
 
-// Auth Screens
+// Auth & Verification Screens
 import { WelcomeScreen } from './src/screens/auth/WelcomeScreen';
 import { LoginScreen } from './src/screens/auth/LoginScreen';
 import { SignupScreen } from './src/screens/auth/SignupScreen';
+import { EmailOtpVerificationScreen } from './src/screens/auth/EmailOtpVerificationScreen';
+import { KycOnboardingScreen } from './src/screens/auth/KycOnboardingScreen';
+import { KycPendingReviewScreen } from './src/screens/auth/KycPendingReviewScreen';
 
 // Investor Screens
 import { InvestorHomeScreen } from './src/screens/investor/InvestorHomeScreen';
@@ -50,7 +54,7 @@ import { AdminConsoleScreen } from './src/screens/admin/AdminConsoleScreen';
 const queryClient = new QueryClient();
 
 export default function App() {
-  const { user, isAuthenticated, isLoading, activeRole, checkAuth } = useAuthStore();
+  const { user, isAuthenticated, isLoading, activeRole, checkAuth, logout, switchRole } = useAuthStore();
   const {
     activeTab,
     setActiveTab,
@@ -63,6 +67,7 @@ export default function App() {
 
   const [authView, setAuthView] = useState<'welcome' | 'login' | 'signup'>('welcome');
   const [deviceFrameMode, setDeviceFrameMode] = useState(true);
+  const [isResubmittingKyc, setIsResubmittingKyc] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -173,10 +178,41 @@ export default function App() {
 
       {!isAuthenticated ? (
         renderAuthContent()
+      ) : activeRole !== 'admin' && !user?.isEmailVerified ? (
+        <EmailOtpVerificationScreen
+          onVerified={() => checkAuth()}
+          onLogout={logout}
+        />
+      ) : activeRole !== 'admin' && !user?.isKycVerified ? (
+        user?.kycDetails?.status === 'pending' ||
+        (user?.kycDetails?.status === 'rejected' && !isResubmittingKyc) ? (
+          <KycPendingReviewScreen
+            onRefreshStatus={checkAuth}
+            onOpenAdminDesk={() => {
+              switchRole('admin');
+              setActiveTab('admin');
+            }}
+            onLogout={logout}
+            onResubmit={() => setIsResubmittingKyc(true)}
+          />
+        ) : (
+          <KycOnboardingScreen
+            onSubmitted={() => {
+              setIsResubmittingKyc(false);
+              checkAuth();
+            }}
+            onLogout={logout}
+          />
+        )
       ) : (
         <View style={styles.mainContainer}>
           {/* Top Header unless inside active full-screen chat */}
-          {!activeChatConnectionId && <TopHeader />}
+          {!activeChatConnectionId && (
+            <>
+              <TopHeader />
+              <IpoDropdownBar />
+            </>
+          )}
 
           {/* Main Tab Screen */}
           <View style={styles.screenWrapper}>{renderTabContent()}</View>

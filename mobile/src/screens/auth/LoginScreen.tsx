@@ -16,6 +16,7 @@ import { Icon } from '../../components/common/Icon';
 import { api } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
+import { SocialAuthModal } from '../../components/auth/SocialAuthModal';
 
 interface LoginScreenProps {
   onNavigateToSignup: () => void;
@@ -32,6 +33,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [socialProvider, setSocialProvider] = useState<'google' | 'apple' | null>(null);
 
   const { setAuth } = useAuthStore();
   const { addToast } = useUIStore();
@@ -98,7 +100,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             setIdentifier(val);
             if (errorMessage) setErrorMessage(null);
           }}
-          placeholder="e.g. arjun.kapoor@investor.in"
+          placeholder="e.g. yourname@gmail.com"
           leftIcon="user"
           keyboardType="email-address"
         />
@@ -126,6 +128,32 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           loading={loading}
           style={styles.submitBtn}
         />
+
+        {/* OR Divider */}
+        <View style={styles.orDividerRow}>
+          <View style={styles.orLine} />
+          <Text style={styles.orText}>OR</Text>
+          <View style={styles.orLine} />
+        </View>
+
+        {/* Social Buttons */}
+        <TouchableOpacity
+          style={styles.socialBtn}
+          activeOpacity={0.8}
+          onPress={() => setSocialProvider('google')}
+        >
+          <Icon name="google" size={18} />
+          <Text style={styles.socialBtnText}>Continue with Google</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.socialBtn}
+          activeOpacity={0.8}
+          onPress={() => setSocialProvider('apple')}
+        >
+          <Icon name="apple" size={18} color="#000000" />
+          <Text style={styles.socialBtnText}>Continue with Apple</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.switchRow}>
@@ -134,6 +162,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           <Text style={styles.switchLink}>Create Account</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Social Authentication Modal */}
+      <SocialAuthModal
+        visible={!!socialProvider}
+        provider={socialProvider}
+        onClose={() => setSocialProvider(null)}
+        defaultRole="investor"
+      />
     </ScrollView>
   );
 };
@@ -229,5 +265,40 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     fontWeight: typography.weights.bold,
     color: colors.primaryActionBlue
+  },
+  orDividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: spacing.md
+  },
+  orLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.borderLight
+  },
+  orText: {
+    paddingHorizontal: spacing.md,
+    fontSize: 11,
+    fontWeight: typography.weights.semibold,
+    color: colors.mutedText
+  },
+  socialBtn: {
+    width: '100%',
+    height: 48,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.full,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    marginBottom: spacing.sm,
+    ...shadows.sm
+  },
+  socialBtnText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.semibold,
+    color: colors.primaryNavy
   }
 });

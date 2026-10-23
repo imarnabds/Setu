@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { storage } from '../services/storage.js';
+import { dbService } from '../services/dbService.js';
 import { AuthenticatedRequest } from '../middleware/auth.js';
 import { kycReviewSchema } from '../validators/schemas.js';
 
@@ -8,9 +8,9 @@ export const getAdminStats = async (
   res: Response
 ): Promise<void> => {
   try {
-    const users = storage.getAllUsers();
-    const pokes = storage.getAllPokes();
-    const connections = storage.getAllConnections();
+    const users = await dbService.getAllUsers();
+    const pokes = await dbService.getAllPokes();
+    const connections = await dbService.getAllConnections();
 
     const totalUsers = users.length;
     const investorsCount = users.filter((u) => u.primaryRole === 'investor').length;
@@ -70,7 +70,7 @@ export const getAdminUsers = async (
 ): Promise<void> => {
   try {
     const { role, kycStatus, q } = req.query;
-    let users = storage.getAllUsers();
+    let users = await dbService.getAllUsers();
 
     if (role && typeof role === 'string' && role !== 'all') {
       users = users.filter((u) => u.primaryRole === role);
@@ -106,8 +106,8 @@ export const reviewKyc = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { userId } = req.params;
-    const user = storage.findUserById(userId);
+    const userId = req.params.userId as string;
+    const user = await dbService.findUserById(userId);
 
     if (!user) {
       res.status(404).json({ success: false, error: 'User not found' });
@@ -126,8 +126,9 @@ export const reviewKyc = async (
 
     const { status, notes } = parseResult.data;
     const now = new Date().toISOString();
+    const reviewerIdentifier = req.user?.email || req.user?.id || 'kuchbhi0804@gmail.com';
 
-    const updated = storage.updateUser(userId, {
+    const updated = await dbService.updateUser(userId, {
       isKycVerified: status === 'verified',
       kycDetails: {
         ...(user.kycDetails || {
@@ -136,30 +137,32 @@ export const reviewKyc = async (
           submittedAt: now
         }),
         status,
-        notes: notes || '',
-        verifiedAt: status === 'verified' ? now : undefined
+        notes: notes.trim(),
+        verifiedAt: status === 'verified' ? now : undefined,
+        reviewedBy: reviewerIdentifier,
+        reviewedAt: now
       }
     });
 
-    // Notify user
-    storage.createNotification({
+    // Notify user with the mandatory compliance note
+    await dbService.createNotification({
       id: 'notif_' + Date.now().toString(36),
       userId,
-      title: status === 'verified' ? 'Profile Verified!' : 'Verification Update',
+      title: status === 'verified' ? 'KYC Verification Approved!' : 'KYC Verification Rejected',
       message:
         status === 'verified'
-          ? 'Your Demat & identity verification has been approved by compliance.'
-          : `Verification could not be completed: ${notes || 'Please resubmit documents.'}`,
+          ? `Your verification has been approved by compliance. Note: "${notes.trim()}"`
+          : `Your verification submission was rejected. Reason: "${notes.trim()}". Please re-upload clear documents.`,
       type: 'kyc_status',
       isRead: false,
       createdAt: now
     });
 
-    storage.createAuditLog({
+    await dbService.createAuditLog({
       id: 'aud_' + Date.now().toString(36),
       actorId: req.user?.id || 'admin',
       action: status === 'verified' ? 'KYC_APPROVED' : 'KYC_REJECTED',
-      details: { userId, status, notes },
+      details: { userId, status, notes: notes.trim(), reviewer: reviewerIdentifier },
       ipAddress: req.ip,
       timestamp: now
     });
@@ -179,19 +182,22 @@ export const getAllPokes = async (
   res: Response
 ): Promise<void> => {
   try {
-    const pokes = storage.getAllPokes().map((p) => {
-      const sender = storage.findUserById(p.senderId);
-      const recipient = storage.findUserById(p.recipientId);
-      return {
-        ...p,
-        senderName: sender?.fullName || p.senderId,
-        recipientName: recipient?.fullName || p.recipientId
-      };
-    });
+    const pokes = await dbService.getAllPokes();
+    const populated = await Promise.all(
+      pokes.map(async (p) => {
+        const sender = await dbService.findUserById(p.senderId);
+        const recipient = await dbService.findUserById(p.recipientId);
+        return {
+          ...p,
+          senderName: sender?.fullName || p.senderId,
+          recipientName: recipient?.fullName || p.recipientId
+        };
+      })
+    );
 
     res.json({
       success: true,
-      data: pokes
+      data: populated
     });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to retrieve pokes' });
@@ -203,19 +209,22 @@ export const getAllConnections = async (
   res: Response
 ): Promise<void> => {
   try {
-    const connections = storage.getAllConnections().map((c) => {
-      const userA = storage.findUserById(c.userAId);
-      const userB = storage.findUserById(c.userBId);
-      return {
-        ...c,
-        userAName: userA?.fullName || c.userAId,
-        userBName: userB?.fullName || c.userBId
-      };
-    });
+    const connections = await dbService.getAllConnections();
+    const populated = await Promise.all(
+      connections.map(async (c) => {
+        const userA = await dbService.findUserById(c.userAId);
+        const userB = await dbService.findUserById(c.userBId);
+        return {
+          ...c,
+          userAName: userA?.fullName || c.userAId,
+          userBName: userB?.fullName || c.userBId
+        };
+      })
+    );
 
     res.json({
       success: true,
-      data: connections
+      data: populated
     });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to retrieve connections' });
@@ -227,12 +236,62 @@ export const getAuditLogs = async (
   res: Response
 ): Promise<void> => {
   try {
-    const logs = storage.getAuditLogs();
+    const logs = await dbService.getAuditLogs();
     res.json({
       success: true,
       data: logs
     });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to retrieve audit logs' });
+  }
+};
+
+export const getConnectionMessagesForAdmin = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    if (!req.user || req.user.primaryRole !== 'admin') {
+      res.status(403).json({
+        success: false,
+        error: 'Administrative message review requires elevated admin role.'
+      });
+      return;
+    }
+
+    const connectionId = req.params.connectionId as string;
+    const { reason } = req.query;
+
+    const connection = await dbService.findConnectionById(connectionId);
+    if (!connection) {
+      res.status(404).json({ success: false, error: 'Connection not found' });
+      return;
+    }
+
+    // Mandatory audit log record for message inspection
+    await dbService.createAuditLog({
+      id: 'aud_' + Date.now().toString(36),
+      actorId: req.user.id,
+      action: 'ADMIN_CHAT_INSPECTED',
+      details: {
+        connectionId,
+        adminEmail: req.user.email,
+        reason: typeof reason === 'string' ? reason : 'Compliance audit review',
+        timestamp: new Date().toISOString()
+      },
+      ipAddress: req.ip,
+      timestamp: new Date().toISOString()
+    });
+
+    const messages = await dbService.getMessagesForConnection(connectionId);
+    res.json({
+      success: true,
+      data: {
+        connection,
+        messages
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to review messages' });
   }
 };

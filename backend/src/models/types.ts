@@ -9,6 +9,14 @@ export interface KycDetails {
   status: KycStatus;
   notes?: string;
   verifiedAt?: string;
+  livePhotoUrl?: string;
+  aadhaarNumber?: string;
+  aadhaarFrontUrl?: string;
+  aadhaarBackUrl?: string;
+  panNumber?: string;
+  panCardUrl?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
 }
 
 export interface User {
@@ -21,6 +29,8 @@ export interface User {
   isEmailVerified: boolean;
   isMobileVerified: boolean;
   isKycVerified: boolean;
+  emailOtpCode?: string;
+  emailOtpExpiresAt?: string;
   kycDetails?: KycDetails;
   avatarUrl?: string;
   city?: string;
@@ -37,6 +47,32 @@ export interface User {
   updatedAt: string;
 }
 
+export type IpoLifecycleStatus = 'Upcoming' | 'Open' | 'Closed' | 'Listed';
+
+export interface IPO {
+  id: string; // Database ID / Upstox identifier
+  name: string; // IPO Name
+  status: IpoLifecycleStatus; // 'Upcoming' | 'Open' | 'Closed' | 'Listed'
+  lastUpdated: string; // ISO timestamp of synchronization
+  isStale?: boolean; // True if provider API failed or threshold exceeded
+  isVerified?: boolean; // True for live provider verified records; false for preserved demo
+  isArchived?: boolean; // True for preserved historical records not in active provider feed
+  source?: string; // 'upstox' | 'demo_preserved' | 'local_sync'
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IpoSyncMeta {
+  lastSyncedAt: string;
+  isStale: boolean;
+  syncStatus: 'synced' | 'stale' | 'failed' | 'unauthorized';
+  syncError?: string | null;
+  totalOfferings: number;
+  insertedCount?: number;
+  updatedCount?: number;
+  archivedCount?: number;
+}
+
 export type PokeStatus = 'pending' | 'accepted' | 'rejected' | 'cancelled' | 'expired';
 
 export interface PokeRequest {
@@ -45,6 +81,8 @@ export interface PokeRequest {
   recipientId: string;
   senderRole: UserRole;
   recipientRole: UserRole;
+  ipoId?: string;
+  ipoName?: string;
   status: PokeStatus;
   proposedCommissionRate?: number;
   commissionBasis?: string;
@@ -63,6 +101,8 @@ export type ConnectionStatus = 'active' | 'disconnected' | 'blocked';
 
 export interface Connection {
   id: string;
+  ipoId: string;
+  ipoName: string;
   userAId: string; // Typically Demat Holder
   userBId: string; // Typically Investor
   pokeRequestId: string;

@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { verifyAccessToken } from '../utils/security.js';
-import { storage } from './storage.js';
+import { dbService } from './dbService.js';
 
 class SocketService {
   private io: Server | null = null;
@@ -11,7 +11,8 @@ class SocketService {
 
     io.use((socket: Socket, next) => {
       const token =
-        socket.handshake.auth?.token || socket.handshake.headers?.authorization?.replace('Bearer ', '');
+        socket.handshake.auth?.token ||
+        socket.handshake.headers?.authorization?.replace('Bearer ', '');
 
       if (!token) {
         return next(new Error('Authentication token required'));
@@ -40,12 +41,18 @@ class SocketService {
       socket.join(`user:${userId}`);
       console.log(`[Socket] User ${userId} connected on socket ${socket.id}`);
 
-      // Handle joining a connection room for real-time chat
-      socket.on('join_connection', (connectionId: string) => {
-        const conn = storage.findConnectionById(connectionId);
-        if (conn && (conn.userAId === userId || conn.userBId === userId)) {
-          socket.join(`connection:${connectionId}`);
-          console.log(`[Socket] User ${userId} joined connection room: ${connectionId}`);
+      // Handle joining a connection room for real-time chat with database authorization
+      socket.on('join_connection', async (connectionId: string) => {
+        try {
+          const conn = await dbService.findConnectionById(connectionId);
+          if (conn && (conn.userAId === userId || conn.userBId === userId)) {
+            socket.join(`connection:${connectionId}`);
+            console.log(`[Socket] User ${userId} joined connection room: ${connectionId}`);
+          } else {
+            console.warn(`[Socket Security] User ${userId} denied access to connection room: ${connectionId}`);
+          }
+        } catch (err: any) {
+          console.error('[Socket Error] join_connection error:', err.message);
         }
       });
 

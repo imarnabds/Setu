@@ -26,7 +26,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   onTypingStart,
   onTypingStop,
   disabled = false,
-  placeholder = 'Type a message to discuss IPO assistance...',
+  placeholder = 'Type a message...',
   style
 }) => {
   const [text, setText] = useState('');
@@ -64,37 +64,49 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 
   return (
     <View style={[styles.container, style]}>
+      {/* Paperclip Attachment Icon */}
+      <TouchableOpacity
+        style={styles.attachBtn}
+        activeOpacity={0.7}
+        disabled={disabled}
+      >
+        <Icon name="paperclip" size={20} color={colors.secondaryText} />
+      </TouchableOpacity>
+
+      {/* Input Pill Container */}
       <View style={styles.inputWrapper}>
         <TextInput
           value={text}
           onChangeText={handleChangeText}
           placeholder={disabled ? 'Conversation unavailable' : placeholder}
-          placeholderTextColor={colors.secondaryText}
+          placeholderTextColor={colors.mutedText}
           editable={!disabled && !sending}
-          multiline
+          multiline={false}
           maxLength={1000}
           style={styles.input}
+          onSubmitEditing={handleSend}
+          returnKeyType="send"
         />
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={handleSend}
-          disabled={!text.trim() || sending || disabled}
-          style={[
-            styles.sendButton,
-            text.trim() && !disabled && !sending ? styles.sendButtonActive : styles.sendButtonDisabled
-          ]}
-        >
-          {sending ? (
-            <ActivityIndicator size="small" color={colors.surface} />
-          ) : (
-            <Icon
-              name="send"
-              size={18}
-              color={text.trim() && !disabled ? colors.surface : colors.secondaryText}
-            />
-          )}
-        </TouchableOpacity>
       </View>
+
+      {/* Circular Blue Send Button */}
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={handleSend}
+        disabled={!text.trim() || sending || disabled}
+        style={[
+          styles.sendButton,
+          text.trim() && !disabled && !sending
+            ? styles.sendButtonActive
+            : styles.sendButtonDisabled
+        ]}
+      >
+        {sending ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <Icon name="send" size={16} color="#FFFFFF" />
+        )}
+      </TouchableOpacity>
     </View>
   );
 };
@@ -102,42 +114,49 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2
-  },
-  inputWrapper: {
+    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceSubtle,
-    borderRadius: borderRadius.button,
+    gap: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight
+  },
+  attachBtn: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  inputWrapper: {
+    flex: 1,
+    height: 44,
+    backgroundColor: '#F8FAFC',
+    borderRadius: borderRadius.full,
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: spacing.md,
-    paddingVertical: 4
+    justifyContent: 'center'
   },
   input: {
-    flex: 1,
-    minHeight: 40,
-    maxHeight: 100,
     fontSize: typography.sizes.sm,
-    color: colors.primaryText,
-    paddingVertical: 6
+    color: colors.deepNavy,
+    height: '100%',
+    paddingVertical: 0
   },
   sendButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: spacing.sm
-  },
-  sendButtonActive: {
-    backgroundColor: colors.primaryActionBlue,
+    backgroundColor: colors.primaryBlue,
     ...shadows.sm
   },
+  sendButtonActive: {
+    backgroundColor: colors.primaryBlue
+  },
   sendButtonDisabled: {
-    backgroundColor: colors.borderLight
+    backgroundColor: '#93C5FD'
   }
 });

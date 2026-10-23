@@ -122,6 +122,14 @@ export const RequestCard: React.FC<RequestCardProps> = ({
         <StatusBadge status={poke.status} />
       </View>
 
+      {/* Target IPO Badge */}
+      {poke.ipoName && (
+        <View style={styles.ipoBadgeRow}>
+          <Icon name="trending-up" size={11} color={colors.primaryBlue} />
+          <Text style={styles.ipoBadgeText}>{poke.ipoName}</Text>
+        </View>
+      )}
+
       {/* Message / Purpose */}
       {poke.message ? (
         <View style={styles.messageContainer}>
@@ -254,6 +262,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between'
+  },
+  ipoBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EDF2FE',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#D4E4FC',
+    gap: 4,
+    marginTop: 6
+  },
+  ipoBadgeText: {
+    fontSize: 10,
+    fontWeight: typography.weights.bold,
+    color: colors.primaryBlue
   },
   userInfo: {
     flexDirection: 'row',

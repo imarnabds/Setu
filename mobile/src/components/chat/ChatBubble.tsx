@@ -33,7 +33,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
     return (
       <View style={[styles.systemContainer, style]}>
         <View style={styles.systemIcon}>
-          <Icon name="shield" size={14} color={colors.primaryActionBlue} />
+          <Icon name="shield" size={14} color={colors.primaryBlue} />
         </View>
         <Text style={styles.systemText}>{content}</Text>
         <Text style={styles.systemTime}>{formattedTime}</Text>
@@ -65,9 +65,10 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
           {isMe && (
             <View style={styles.readIcon}>
               <Icon
-                name={readAt ? 'check-circle' : 'check'}
-                size={12}
-                color={readAt ? colors.success : 'rgba(255,255,255,0.7)'}
+                name="check-double"
+                size={13}
+                color="#93C5FD"
+                strokeWidth={2}
               />
             </View>
           )}
@@ -79,29 +80,29 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
 
 const styles = StyleSheet.create({
   systemContainer: {
-    backgroundColor: colors.subtleBlueBackground,
-    borderRadius: 18,
+    backgroundColor: '#F0F5FF',
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#D4E4FC',
-    padding: spacing.md,
-    marginVertical: spacing.sm,
+    borderColor: '#E2E8F0',
+    padding: spacing.sm,
+    marginVertical: spacing.xs,
     marginHorizontal: spacing.md,
     alignItems: 'center'
   },
   systemIcon: {
-    marginBottom: 4
+    marginBottom: 2
   },
   systemText: {
-    fontSize: typography.sizes.xs,
-    color: colors.primaryNavy,
+    fontSize: 11,
+    color: colors.deepNavy,
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: 16,
     fontWeight: typography.weights.medium
   },
   systemTime: {
-    fontSize: 10,
+    fontSize: 9.5,
     color: colors.secondaryText,
-    marginTop: 4
+    marginTop: 2
   },
   row: {
     flexDirection: 'row',
@@ -115,51 +116,49 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start'
   },
   bubble: {
-    maxWidth: '78%',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: 20
+    maxWidth: '82%',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 18
   },
   bubbleMe: {
-    backgroundColor: colors.primaryActionBlue,
+    backgroundColor: colors.primaryBlue,
     borderBottomRightRadius: 4
   },
   bubbleThem: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: '#F1F5F9',
     borderBottomLeftRadius: 4
   },
   messageText: {
-    fontSize: typography.sizes.sm,
-    lineHeight: 20
+    fontSize: 13.5,
+    lineHeight: 19
   },
   textMe: {
-    color: colors.surface,
+    color: '#FFFFFF',
     fontWeight: typography.weights.normal
   },
   textThem: {
-    color: colors.primaryText,
+    color: colors.deepNavy,
     fontWeight: typography.weights.normal
   },
   footerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    marginTop: 4
+    marginTop: 4,
+    gap: 3
   },
   timeText: {
     fontSize: 10,
-    marginRight: 4,
     fontVariant: ['tabular-nums']
   },
   timeMe: {
-    color: 'rgba(255,255,255,0.8)'
+    color: 'rgba(255, 255, 255, 0.85)'
   },
   timeThem: {
     color: colors.secondaryText
   },
   readIcon: {
-    marginLeft: 2
+    marginLeft: 1
   }
 });

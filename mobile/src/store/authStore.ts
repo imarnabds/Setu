@@ -11,12 +11,21 @@ export interface User {
   isEmailVerified: boolean;
   isMobileVerified: boolean;
   isKycVerified: boolean;
+  emailOtpCode?: string;
   kycDetails?: {
     documentType: string;
     documentNumberMasked: string;
     submittedAt: string;
     status: 'none' | 'pending' | 'verified' | 'rejected';
     notes?: string;
+    livePhotoUrl?: string;
+    aadhaarNumber?: string;
+    aadhaarFrontUrl?: string;
+    aadhaarBackUrl?: string;
+    panNumber?: string;
+    panCardUrl?: string;
+    reviewedBy?: string;
+    reviewedAt?: string;
   };
   avatarUrl?: string;
   city?: string;

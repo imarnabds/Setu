@@ -1,7 +1,21 @@
 import axios from 'axios';
+import { SecureStorage } from './storageAdapter';
 
-// The backend runs on port 5000
-const API_BASE_URL = 'http://localhost:5000/api';
+// Dynamic API URL resolution supporting env, physical mobile LAN devices, and production
+const resolveApiBaseUrl = (): string => {
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+  if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+    const host = window.location.hostname;
+    if (host !== 'localhost' && host !== '127.0.0.1') {
+      return `http://${host}:5000/api`;
+    }
+  }
+  return 'http://localhost:5000/api';
+};
+
+export const API_BASE_URL = resolveApiBaseUrl();
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -11,29 +25,42 @@ export const api = axios.create({
   timeout: 10000
 });
 
-// In-memory token storage for web & react-native sessions
+// Keys for secure token persistence
+const ACCESS_TOKEN_KEY = 'setu_access_token';
+const REFRESH_TOKEN_KEY = 'setu_refresh_token';
+
 let currentAccessToken: string | null = null;
 let currentRefreshToken: string | null = null;
+
+// Initialize tokens from secure storage
+(async () => {
+  try {
+    currentAccessToken = await SecureStorage.getItem(ACCESS_TOKEN_KEY);
+    currentRefreshToken = await SecureStorage.getItem(REFRESH_TOKEN_KEY);
+  } catch (e) {
+    // Ignore init error
+  }
+})();
 
 export const setAuthTokens = (access: string | null, refresh: string | null) => {
   currentAccessToken = access;
   currentRefreshToken = refresh;
   if (access) {
-    localStorage.setItem('ipo_access_token', access);
+    SecureStorage.setItem(ACCESS_TOKEN_KEY, access);
   } else {
-    localStorage.removeItem('ipo_access_token');
+    SecureStorage.removeItem(ACCESS_TOKEN_KEY);
   }
   if (refresh) {
-    localStorage.setItem('ipo_refresh_token', refresh);
+    SecureStorage.setItem(REFRESH_TOKEN_KEY, refresh);
   } else {
-    localStorage.removeItem('ipo_refresh_token');
+    SecureStorage.removeItem(REFRESH_TOKEN_KEY);
   }
 };
 
 export const getStoredTokens = () => {
-  if (!currentAccessToken && typeof window !== 'undefined' && window.localStorage) {
-    currentAccessToken = localStorage.getItem('ipo_access_token');
-    currentRefreshToken = localStorage.getItem('ipo_refresh_token');
+  if (!currentAccessToken) {
+    currentAccessToken = SecureStorage.getSync(ACCESS_TOKEN_KEY);
+    currentRefreshToken = SecureStorage.getSync(REFRESH_TOKEN_KEY);
   }
   return {
     accessToken: currentAccessToken,

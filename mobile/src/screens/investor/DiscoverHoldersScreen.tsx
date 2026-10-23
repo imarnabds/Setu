@@ -19,11 +19,13 @@ import { Icon } from '../../components/common/Icon';
 import { api } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
+import { useIpoStore } from '../../store/ipoStore';
 import { PokeButtonState } from '../../components/poke/PokeButton';
 
 export const DiscoverHoldersScreen: React.FC = () => {
   const { user } = useAuthStore();
   const { addToast, openChat } = useUIStore();
+  const { selectedIpo } = useIpoStore();
 
   const [holders, setHolders] = useState<any[]>([]);
   const [pokes, setPokes] = useState<any[]>([]);
@@ -77,22 +79,24 @@ export const DiscoverHoldersScreen: React.FC = () => {
     setRefreshing(false);
   };
 
-  // Determine user's poke state with a specific holder
+  // Determine user's poke state with a specific holder for this IPO
   const getPokeStateForHolder = (holderId: string): PokeButtonState => {
-    // Check if connected
+    // Check if connected for active IPO
     const conn = connections.find(
       (c) =>
         (c.userAId === holderId || c.userBId === holderId) &&
         (c.userAId === user?.id || c.userBId === user?.id) &&
+        (!selectedIpo || c.ipoId === selectedIpo.id) &&
         c.status === 'active'
     );
     if (conn) return 'accepted';
 
-    // Check if poke exists
+    // Check if poke exists for active IPO
     const poke = pokes.find(
       (p) =>
         ((p.senderId === user?.id && p.recipientId === holderId) ||
           (p.senderId === holderId && p.recipientId === user?.id)) &&
+        (!selectedIpo || !p.ipoId || p.ipoId === selectedIpo.id) &&
         ['pending', 'accepted', 'rejected', 'blocked'].includes(p.status)
     );
 
@@ -113,13 +117,14 @@ export const DiscoverHoldersScreen: React.FC = () => {
     try {
       const res = await api.post('/pokes', {
         recipientId: holder.id,
+        ipoId: selectedIpo?.id,
         proposedCommissionRate: holder.defaultCommissionRate,
         commissionBasis: holder.commissionBasis,
-        message: `Hello ${holder.fullName}, I would like to connect and discuss IPO assistance.`
+        message: `Hello ${holder.fullName}, I would like to connect regarding ${selectedIpo ? selectedIpo.name : 'IPO'} assistance.`
       });
 
       if (res.data.success) {
-        addToast(`Poke sent to ${holder.fullName}! Awaiting acceptance.`, 'success');
+        addToast(`Poke sent to ${holder.fullName} for ${selectedIpo ? selectedIpo.name : 'IPO'}!`, 'success');
         await fetchHoldersAndPokes();
       }
     } catch (err: any) {

@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { config } from '../config/index.js';
@@ -15,6 +16,10 @@ export const comparePassword = async (
   return bcrypt.compare(plain, hashed);
 };
 
+export const hashRefreshToken = (token: string): string => {
+  return crypto.createHash('sha256').update(token).digest('hex');
+};
+
 export const generateTokens = (user: User) => {
   const payload = {
     userId: user.id,
@@ -23,12 +28,16 @@ export const generateTokens = (user: User) => {
   };
 
   const accessToken = jwt.sign(payload, config.jwtSecret, {
-    expiresIn: '2h'
+    expiresIn: config.jwtExpiresIn as any
   });
 
-  const refreshToken = jwt.sign({ userId: user.id }, config.refreshTokenSecret, {
-    expiresIn: '7d'
-  });
+  const refreshToken = jwt.sign(
+    { userId: user.id },
+    config.refreshTokenSecret,
+    {
+      expiresIn: config.refreshTokenExpiresIn as any
+    }
+  );
 
   return { accessToken, refreshToken };
 };

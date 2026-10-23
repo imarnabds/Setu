@@ -1,7 +1,27 @@
 import { Request, Response } from 'express';
-import { storage } from '../services/storage.js';
+import { dbService } from '../services/dbService.js';
 import { AuthenticatedRequest } from '../middleware/auth.js';
 import { profileUpdateSchema, kycSubmitSchema } from '../validators/schemas.js';
+import { User } from '../models/types.js';
+
+// Explicit public profile DTO allowlist that guarantees zero exposure of email, phone, or KYC documents
+export const toPublicProfileDTO = (user: User) => ({
+  id: user.id,
+  fullName: user.fullName,
+  primaryRole: user.primaryRole,
+  avatarUrl: user.avatarUrl,
+  city: user.city,
+  region: user.region,
+  bio: user.bio,
+  investmentExperience: user.investmentExperience,
+  preferredLanguage: user.preferredLanguage,
+  supportedCategories: user.supportedCategories || [],
+  defaultCommissionRate: user.defaultCommissionRate,
+  commissionBasis: user.commissionBasis,
+  isKycVerified: user.isKycVerified,
+  isAvailable: user.isAvailable,
+  createdAt: user.createdAt
+});
 
 export const getHolders = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -15,9 +35,10 @@ export const getHolders = async (req: Request, res: Response): Promise<void> => 
       sortBy
     } = req.query;
 
-    let holders = storage.getAllUsers().filter((u) => u.primaryRole === 'demat_holder');
+    const allUsers = await dbService.getAllUsers();
+    let holders = allUsers.filter((u) => u.primaryRole === 'demat_holder');
 
-    // Query search
+    // Search filter
     if (q && typeof q === 'string') {
       const query = q.toLowerCase().trim();
       holders = holders.filter(
@@ -33,7 +54,9 @@ export const getHolders = async (req: Request, res: Response): Promise<void> => 
     // Region filter
     if (region && typeof region === 'string' && region !== 'all') {
       holders = holders.filter(
-        (h) => h.region?.toLowerCase() === region.toLowerCase() || h.city?.toLowerCase() === region.toLowerCase()
+        (h) =>
+          h.region?.toLowerCase() === region.toLowerCase() ||
+          h.city?.toLowerCase() === region.toLowerCase()
       );
     }
 
@@ -69,7 +92,6 @@ export const getHolders = async (req: Request, res: Response): Promise<void> => 
     } else if (sortBy === 'commission_high') {
       holders.sort((a, b) => b.defaultCommissionRate - a.defaultCommissionRate);
     } else {
-      // Default: verified first, then newest
       holders.sort((a, b) => {
         if (a.isKycVerified !== b.isKycVerified) {
           return a.isKycVerified ? -1 : 1;
@@ -78,8 +100,8 @@ export const getHolders = async (req: Request, res: Response): Promise<void> => 
       });
     }
 
-    // Strip passwords and sensitive internal fields
-    const safeHolders = holders.map(({ password, refreshToken, ...rest }) => rest);
+    // Apply strict Public DTO allowlist (masks email, phone, and KYC documents)
+    const safeHolders = holders.map(toPublicProfileDTO);
 
     res.json({
       success: true,
@@ -93,7 +115,8 @@ export const getHolders = async (req: Request, res: Response): Promise<void> => 
 export const getInvestors = async (req: Request, res: Response): Promise<void> => {
   try {
     const { q, region } = req.query;
-    let investors = storage.getAllUsers().filter((u) => u.primaryRole === 'investor');
+    const allUsers = await dbService.getAllUsers();
+    let investors = allUsers.filter((u) => u.primaryRole === 'investor');
 
     if (q && typeof q === 'string') {
       const query = q.toLowerCase().trim();
@@ -107,11 +130,13 @@ export const getInvestors = async (req: Request, res: Response): Promise<void> =
 
     if (region && typeof region === 'string' && region !== 'all') {
       investors = investors.filter(
-        (inv) => inv.region?.toLowerCase() === region.toLowerCase() || inv.city?.toLowerCase() === region.toLowerCase()
+        (inv) =>
+          inv.region?.toLowerCase() === region.toLowerCase() ||
+          inv.city?.toLowerCase() === region.toLowerCase()
       );
     }
 
-    const safeInvestors = investors.map(({ password, refreshToken, ...rest }) => rest);
+    const safeInvestors = investors.map(toPublicProfileDTO);
     res.json({
       success: true,
       data: safeInvestors
@@ -123,17 +148,17 @@ export const getInvestors = async (req: Request, res: Response): Promise<void> =
 
 export const getProfileById = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
-    const user = storage.findUserById(id);
+    const id = req.params.id as string;
+    const user = await dbService.findUserById(id);
     if (!user) {
       res.status(404).json({ success: false, error: 'User profile not found' });
       return;
     }
 
-    const { password, refreshToken, ...safeProfile } = user;
+    // Return sanitized public profile DTO
     res.json({
       success: true,
-      data: safeProfile
+      data: toPublicProfileDTO(user)
     });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch user profile' });
@@ -160,12 +185,13 @@ export const updateProfile = async (
       return;
     }
 
-    const updated = storage.updateUser(req.user.id, parseResult.data);
+    const updated = await dbService.updateUser(req.user.id, parseResult.data);
     if (!updated) {
       res.status(404).json({ success: false, error: 'User not found' });
       return;
     }
 
+    // Return own profile with password stripped
     const { password, refreshToken, ...safeProfile } = updated;
     res.json({
       success: true,
@@ -198,31 +224,72 @@ export const submitKyc = async (
     }
 
     const now = new Date().toISOString();
+    const {
+      avatarUrl,
+      livePhotoUrl,
+      aadhaarNumber,
+      aadhaarFrontUrl,
+      aadhaarBackUrl,
+      panNumber,
+      panCardUrl,
+      documentType
+    } = parseResult.data;
+
+    // Masked document number (e.g., Aadhaar XXXX-XXXX-1234 & PAN ABCDE****F)
+    const maskedAadhaar = aadhaarNumber
+      ? 'XXXX-XXXX-' + aadhaarNumber.replace(/\D/g, '').slice(-4)
+      : 'XXXX-XXXX-XXXX';
+    const maskedPan = panNumber
+      ? panNumber.slice(0, 5) + '****' + panNumber.slice(-1)
+      : 'XXXXXXXXXX';
+
     const kycDetails = {
-      documentType: parseResult.data.documentType,
-      documentNumberMasked: parseResult.data.documentNumberMasked,
+      documentType: documentType || 'Aadhaar + PAN Verification',
+      documentNumberMasked: `${maskedAadhaar} / ${maskedPan}`,
       submittedAt: now,
-      status: 'pending' as const
+      status: 'pending' as const,
+      livePhotoUrl,
+      aadhaarNumber,
+      aadhaarFrontUrl,
+      aadhaarBackUrl,
+      panNumber,
+      panCardUrl
     };
 
-    const updated = storage.updateUser(req.user.id, {
+    const userUpdates: Partial<User> = {
       kycDetails,
       isKycVerified: false
-    });
+    };
 
-    storage.createAuditLog({
+    if (avatarUrl) {
+      userUpdates.avatarUrl = avatarUrl;
+    }
+
+    const updated = await dbService.updateUser(req.user.id, userUpdates);
+
+    await dbService.createAuditLog({
       id: 'aud_' + Date.now().toString(36),
       actorId: req.user.id,
       action: 'KYC_SUBMITTED',
-      details: { documentType: parseResult.data.documentType },
+      details: {
+        documentType: kycDetails.documentType,
+        hasLivePhoto: !!livePhotoUrl,
+        hasAadhaar: !!aadhaarFrontUrl && !!aadhaarBackUrl,
+        hasPan: !!panCardUrl
+      },
       ipAddress: req.ip,
       timestamp: now
     });
 
+    const { password: _, refreshToken: __, ...safeUser } = updated || req.user;
+
     res.json({
       success: true,
       message: 'KYC documents submitted for review. Our compliance team will review within 24 hours.',
-      data: updated?.kycDetails
+      data: {
+        user: safeUser,
+        kycDetails: updated?.kycDetails
+      }
     });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to submit KYC' });

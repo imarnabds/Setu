@@ -55,6 +55,7 @@ export const commissionUpdateSchema = z.object({
 
 export const pokeCreateSchema = z.object({
   recipientId: z.string().min(1, 'Recipient ID is required'),
+  ipoId: z.string().optional(),
   message: z.string().max(500).optional(),
   proposedCommissionRate: z
     .number()
@@ -83,12 +84,32 @@ export const sendMessageSchema = z.object({
   content: z.string().min(1, 'Message cannot be empty').max(2000, 'Message is too long')
 });
 
+export const sendEmailOtpSchema = z.object({
+  email: z.string().email('Valid email address is required').optional()
+});
+
+export const verifyEmailOtpSchema = z.object({
+  code: z.string().length(6, 'Verification code must be 6 digits'),
+  email: z.string().email('Valid email address is required').optional()
+});
+
 export const kycSubmitSchema = z.object({
-  documentType: z.string().min(2, 'Document type is required'),
-  documentNumberMasked: z.string().min(4, 'Masked document number is required')
+  documentType: z.string().min(2).optional().default('Aadhaar + PAN Verification'),
+  documentNumberMasked: z.string().min(4).optional().default('Aadhaar & PAN Submitted'),
+  avatarUrl: z.string().optional(),
+  livePhotoUrl: z.string().min(1, 'Live photo is required'),
+  aadhaarNumber: z.string().min(12, '12-digit Aadhaar number required'),
+  aadhaarFrontUrl: z.string().min(1, 'Aadhaar front document is required'),
+  aadhaarBackUrl: z.string().min(1, 'Aadhaar back document is required'),
+  panNumber: z.string().min(10, '10-character PAN number required'),
+  panCardUrl: z.string().min(1, 'PAN card document is required')
 });
 
 export const kycReviewSchema = z.object({
   status: z.enum(['verified', 'rejected']),
-  notes: z.string().max(500).optional()
+  notes: z
+    .string({ required_error: 'A compliance review note explaining the reason is required' })
+    .trim()
+    .min(3, 'Review note must be at least 3 characters explaining why you approved or rejected this KYC')
+    .max(500, 'Review note cannot exceed 500 characters')
 });

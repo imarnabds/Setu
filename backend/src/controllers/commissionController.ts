@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { storage } from '../services/storage.js';
+import { dbService } from '../services/dbService.js';
 import { AuthenticatedRequest } from '../middleware/auth.js';
 import { commissionUpdateSchema, VALID_COMMISSION_RATES } from '../validators/schemas.js';
 import { CommissionHistory } from '../models/types.js';
@@ -51,7 +51,7 @@ export const updateCommission = async (
 
     // If targetApplicantId is provided, this is an applicant-specific rate proposal
     if (targetApplicantId) {
-      const applicant = storage.findUserById(targetApplicantId);
+      const applicant = await dbService.findUserById(targetApplicantId);
       if (!applicant) {
         res.status(404).json({ success: false, error: 'Applicant user not found' });
         return;
@@ -69,9 +69,9 @@ export const updateCommission = async (
         reason: reason || `Applicant-specific rate proposal for ${applicant.fullName}`,
         timestamp: now
       };
-      storage.createCommissionHistory(historyEntry);
+      await dbService.createCommissionHistory(historyEntry);
 
-      storage.createAuditLog({
+      await dbService.createAuditLog({
         id: createId('aud'),
         actorId: req.user.id,
         action: 'APPLICANT_COMMISSION_PROPOSED',
@@ -94,7 +94,7 @@ export const updateCommission = async (
     }
 
     // Otherwise, update holder's default published rate
-    const updatedUser = storage.updateUser(req.user.id, {
+    const updatedUser = await dbService.updateUser(req.user.id, {
       defaultCommissionRate: rate,
       commissionBasis: basis
     });
@@ -109,9 +109,9 @@ export const updateCommission = async (
       reason: reason || 'Updated default published commission rate',
       timestamp: now
     };
-    storage.createCommissionHistory(historyEntry);
+    await dbService.createCommissionHistory(historyEntry);
 
-    storage.createAuditLog({
+    await dbService.createAuditLog({
       id: createId('aud'),
       actorId: req.user.id,
       action: 'DEFAULT_COMMISSION_UPDATED',
@@ -145,23 +145,25 @@ export const getCommissionHistory = async (
       return;
     }
 
-    const { holderId } = req.params;
-    const targetId = holderId || req.user.id;
+    const holderId = (req.params.holderId as string) || req.user.id;
+    const targetId = holderId;
 
-    const history = storage.getCommissionHistories(targetId);
+    const history = await dbService.getCommissionHistories(targetId);
 
     // Populate target applicant details if present
-    const populated = history.map((h) => {
-      let applicantName = undefined;
-      if (h.targetApplicantId) {
-        const applicant = storage.findUserById(h.targetApplicantId);
-        applicantName = applicant?.fullName;
-      }
-      return {
-        ...h,
-        targetApplicantName: applicantName
-      };
-    });
+    const populated = await Promise.all(
+      history.map(async (h) => {
+        let applicantName = undefined;
+        if (h.targetApplicantId) {
+          const applicant = await dbService.findUserById(h.targetApplicantId);
+          applicantName = applicant?.fullName;
+        }
+        return {
+          ...h,
+          targetApplicantName: applicantName
+        };
+      })
+    );
 
     // Sort by latest first
     populated.sort(

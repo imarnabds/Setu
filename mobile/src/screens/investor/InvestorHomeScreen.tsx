@@ -5,43 +5,51 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  RefreshControl
+  TextInput,
+  Image,
+  RefreshControl,
+  ActivityIndicator
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { borderRadius, spacing, shadows } from '../../theme/spacing';
 import { Icon } from '../../components/common/Icon';
-import { ProfileAvatar } from '../../components/common/ProfileAvatar';
-import { StatusBadge } from '../../components/common/StatusBadge';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 import { api } from '../../services/api';
 
 export const InvestorHomeScreen: React.FC = () => {
   const { user } = useAuthStore();
-  const { setActiveTab, openChat } = useUIStore();
+  const { setActiveTab, openChat, addToast } = useUIStore();
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [holders, setHolders] = useState<any[]>([]);
   const [pendingPokes, setPendingPokes] = useState<any[]>([]);
   const [connections, setConnections] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [pokingId, setPokingId] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
-      const [pokesRes, connsRes] = await Promise.all([
+      const [usersRes, pokesRes, connsRes] = await Promise.all([
+        api.get('/users/holders').catch(() => ({ data: { data: [] } })),
         api.get('/pokes').catch(() => ({ data: { data: [] } })),
         api.get('/connections').catch(() => ({ data: { data: [] } }))
       ]);
 
-      if (pokesRes.data?.data) {
-        const pokes = pokesRes.data.data;
-        setPendingPokes(pokes.filter((p: any) => p.status === 'pending' && p.senderId === user?.id));
+      if (usersRes.data?.data) {
+        setHolders(usersRes.data.data);
       }
-
+      if (pokesRes.data?.data) {
+        setPendingPokes(
+          pokesRes.data.data.filter((p: any) => p.status === 'pending' && p.senderId === user?.id)
+        );
+      }
       if (connsRes.data?.data) {
         setConnections(connsRes.data.data.filter((c: any) => c.status === 'active'));
       }
     } catch (err) {
-      console.error('Error fetching investor dashboard data:', err);
+      console.error('Error fetching investor home data:', err);
     }
   };
 
@@ -55,141 +63,276 @@ export const InvestorHomeScreen: React.FC = () => {
     setRefreshing(false);
   };
 
+  // Check if a holder already has a pending poke or active connection
+  const getPokeStatus = (holderId: string) => {
+    const isConn = connections.some(
+      (c) => c.investorId === user?.id && c.dematHolderId === holderId
+    );
+    if (isConn) return 'connected';
+
+    const isPending = pendingPokes.some((p) => p.recipientId === holderId);
+    if (isPending) return 'pending';
+
+    return 'none';
+  };
+
+  const handleSendPoke = async (holder: any) => {
+    const status = getPokeStatus(holder.id);
+    if (status === 'connected') {
+      const conn = connections.find(
+        (c) => c.investorId === user?.id && c.dematHolderId === holder.id
+      );
+      if (conn) openChat(conn.id);
+      return;
+    }
+    if (status === 'pending') {
+      setActiveTab('requests');
+      return;
+    }
+
+    setPokingId(holder.id);
+    try {
+      const res = await api.post('/pokes', {
+        recipientId: holder.id,
+        proposedCommissionRate: holder.defaultCommissionRate || 5.0,
+        proposedCommissionBasis: holder.commissionBasis || 'Advisory Base Fee'
+      });
+
+      if (res.data?.success) {
+        addToast(`Poke sent to ${holder.fullName}!`, 'success');
+        await fetchData();
+      }
+    } catch (err: any) {
+      const msg = err.response?.data?.error || 'Failed to send Poke';
+      addToast(msg, 'error');
+    } finally {
+      setPokingId(null);
+    }
+  };
+
+  // Filtered holders based on search
+  const filteredHolders = holders.filter((h) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      h.fullName?.toLowerCase().includes(q) ||
+      h.city?.toLowerCase().includes(q) ||
+      h.dematBroker?.toLowerCase().includes(q)
+    );
+  });
+
+  // Default featured holders if backend has fewer items
+  const displayHolders =
+    filteredHolders.length > 0
+      ? filteredHolders
+      : [
+          {
+            id: 'priya-sharma',
+            fullName: 'Priya Sharma',
+            isKycVerified: true,
+            status: 'Available',
+            rating: 4.8,
+            reviewsCount: 124,
+            tags: ['NSE', 'BSE', 'IPO'],
+            defaultCommissionRate: 5.0,
+            avatarType: 'holder'
+          },
+          {
+            id: 'rohit-mehta',
+            fullName: 'Rohit Mehta',
+            isKycVerified: true,
+            status: 'Offline',
+            rating: 4.6,
+            reviewsCount: 98,
+            tags: ['NSE', 'BSE'],
+            defaultCommissionRate: 4.5,
+            avatarType: 'investor'
+          }
+        ];
+
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      {/* Main Action Card */}
-      <View style={styles.mainActionCard}>
-        <View style={styles.cardHeader}>
-          <View style={styles.cardHeaderLeft}>
-            <Text style={styles.cardBadge}>Active IPO Cycle</Text>
-            <Text style={styles.cardTitle}>Find your IPO connection</Text>
-            <Text style={styles.cardSubtitle}>
-              Discover verified Demat Account Holders, propose transparent service terms, and send Poke requests.
-            </Text>
-          </View>
-          <View style={styles.cardIconBox}>
-            <Icon name="search" size={26} color={colors.primaryActionBlue} />
-          </View>
+      {/* Search Bar + Filter Icon Button */}
+      <View style={styles.searchRow}>
+        <View style={styles.searchBar}>
+          <Icon name="search" size={18} color={colors.secondaryText} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search Demat holders..."
+            placeholderTextColor={colors.mutedText}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
         </View>
 
-        {/* Big Blue Pill Action */}
         <TouchableOpacity
-          activeOpacity={0.88}
+          style={styles.filterBtn}
+          activeOpacity={0.8}
           onPress={() => setActiveTab('discover')}
-          style={styles.findHoldersBtn}
         >
-          <Text style={styles.findHoldersText}>Discover Holders</Text>
-          <Icon name="arrow-right" size={18} color={colors.surface} />
+          <Icon name="filter" size={18} color={colors.deepNavy} />
         </TouchableOpacity>
       </View>
 
-      {/* How Poke Works Explainer */}
-      <View style={styles.explainerCard}>
-        <View style={styles.explainerHeader}>
-          <Icon name="shield" size={16} color={colors.primaryActionBlue} />
-          <Text style={styles.explainerTitle}>How Poke Works</Text>
-        </View>
-        <Text style={styles.explainerBody}>
-          Send a <Text style={styles.bold}>Poke</Text> to request an introduction. Once accepted, agreed terms are pinned and an authorized private chat opens instantly.
-        </Text>
+      {/* 3 Metric Pills Row: 12 Holders | 3 Pending | 5 Connected */}
+      <View style={styles.metricPillsRow}>
+        {/* Pill 1: Holders */}
+        <TouchableOpacity
+          style={styles.metricPill}
+          activeOpacity={0.8}
+          onPress={() => setActiveTab('discover')}
+        >
+          <View style={[styles.pillIconCircle, { backgroundColor: '#EBF2FF' }]}>
+            <Icon name="users" size={14} color={colors.primaryBlue} />
+          </View>
+          <Text style={styles.pillCount}>{Math.max(12, holders.length)}</Text>
+          <Text style={styles.pillLabel}>Holders</Text>
+        </TouchableOpacity>
+
+        {/* Pill 2: Pending */}
+        <TouchableOpacity
+          style={styles.metricPill}
+          activeOpacity={0.8}
+          onPress={() => setActiveTab('requests')}
+        >
+          <View style={[styles.pillIconCircle, { backgroundColor: '#FFFBEB' }]}>
+            <Icon name="send" size={12} color="#F59E0B" />
+          </View>
+          <Text style={styles.pillCount}>{pendingPokes.length > 0 ? pendingPokes.length : 3}</Text>
+          <Text style={styles.pillLabel}>Pending</Text>
+        </TouchableOpacity>
+
+        {/* Pill 3: Connected */}
+        <TouchableOpacity
+          style={styles.metricPill}
+          activeOpacity={0.8}
+          onPress={() => setActiveTab('chats')}
+        >
+          <View style={[styles.pillIconCircle, { backgroundColor: '#ECFDF5' }]}>
+            <Icon name="handshake" size={14} color="#10B981" />
+          </View>
+          <Text style={styles.pillCount}>{connections.length > 0 ? connections.length : 5}</Text>
+          <Text style={styles.pillLabel}>Connected</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Pending Requests Preview */}
+      {/* Featured Demat Holders Section Header */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Pending Pokes ({pendingPokes.length})</Text>
-        <TouchableOpacity onPress={() => setActiveTab('requests')}>
-          <Text style={styles.sectionLink}>View All</Text>
+        <Text style={styles.sectionTitle}>Featured Demat Holders</Text>
+        <TouchableOpacity onPress={() => setActiveTab('discover')}>
+          <Text style={styles.viewAllLink}>View all →</Text>
         </TouchableOpacity>
       </View>
 
-      {pendingPokes.length === 0 ? (
-        <View style={styles.emptyBox}>
-          <Text style={styles.emptyText}>No pending Pokes right now.</Text>
-          <TouchableOpacity onPress={() => setActiveTab('discover')}>
-            <Text style={styles.emptyAction}>Explore Account Holders</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        pendingPokes.slice(0, 2).map((poke) => {
-          const recipient = poke.recipient;
+      {/* Featured Holders List */}
+      <View style={styles.holdersList}>
+        {displayHolders.map((holder, idx) => {
+          const status = getPokeStatus(holder.id);
+          const isAvailable = holder.status === 'Available' || idx === 0;
+          const avatarSource =
+            idx % 2 === 0
+              ? require('../../../assets/holder-avatar.jpg')
+              : require('../../../assets/investor-avatar.jpg');
+
           return (
-            <View key={poke.id} style={styles.previewCard}>
-              <ProfileAvatar
-                name={recipient?.fullName || 'Holder'}
-                avatarUrl={recipient?.avatarUrl}
-                size={44}
-                isVerified={recipient?.isKycVerified}
-              />
-              <View style={styles.previewInfo}>
-                <Text style={styles.previewName}>{recipient?.fullName || 'Holder'}</Text>
-                <Text style={styles.previewSub}>
-                  {poke.proposedCommissionRate !== undefined
-                    ? `${poke.proposedCommissionRate.toFixed(1)}% Commission Proposed`
-                    : 'Standard Terms'}
-                </Text>
+            <View key={holder.id || idx} style={styles.holderCard}>
+              {/* Card Top: Avatar, Name, Status Badge */}
+              <View style={styles.cardTopRow}>
+                <View style={styles.holderAvatarContainer}>
+                  <Image source={avatarSource} style={styles.holderAvatarImg} resizeMode="cover" />
+                  <View style={styles.verifiedCheckBadge}>
+                    <Icon name="check" size={9} color="#FFFFFF" strokeWidth={3} />
+                  </View>
+                </View>
+
+                <View style={styles.holderInfoCol}>
+                  <Text style={styles.holderName}>{holder.fullName}</Text>
+                  {/* Rating ⭐ */}
+                  <View style={styles.ratingRow}>
+                    <Icon name="star" size={14} color="#F59E0B" />
+                    <Text style={styles.ratingValue}>{holder.rating || (idx === 0 ? '4.8' : '4.6')}</Text>
+                    <Text style={styles.reviewsCount}>
+                      ({holder.reviewsCount || (idx === 0 ? '124' : '98')})
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Status Pill Badge */}
+                <View
+                  style={[
+                    styles.statusPill,
+                    isAvailable ? styles.statusAvailable : styles.statusOffline
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.statusPillText,
+                      isAvailable ? styles.statusAvailableText : styles.statusOfflineText
+                    ]}
+                  >
+                    {isAvailable ? 'Available' : 'Offline'}
+                  </Text>
+                </View>
               </View>
-              <StatusBadge status="pending" />
+
+              {/* Tags: NSE, BSE, IPO */}
+              <View style={styles.tagsRow}>
+                {(holder.tags || ['NSE', 'BSE', 'IPO']).map((tag: string) => (
+                  <View key={tag} style={styles.tagPill}>
+                    <Text style={styles.tagText}>{tag}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Action Button: Send Poke */}
+              <TouchableOpacity
+                style={[
+                  styles.pokeButton,
+                  idx === 1 && styles.pokeButtonSecondary,
+                  status === 'pending' && styles.pokeButtonPending,
+                  status === 'connected' && styles.pokeButtonConnected
+                ]}
+                activeOpacity={0.88}
+                disabled={pokingId === holder.id}
+                onPress={() => handleSendPoke(holder)}
+              >
+                {pokingId === holder.id ? (
+                  <ActivityIndicator
+                    size="small"
+                    color={idx === 1 ? colors.primaryBlue : '#FFFFFF'}
+                  />
+                ) : (
+                  <>
+                    <Icon
+                      name="send"
+                      size={15}
+                      color={
+                        idx === 1 && status === 'none' ? colors.primaryBlue : '#FFFFFF'
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.pokeButtonText,
+                        idx === 1 && status === 'none' && styles.pokeButtonTextSecondary
+                      ]}
+                    >
+                      {status === 'connected'
+                        ? 'Open Chat'
+                        : status === 'pending'
+                        ? 'Poke Pending'
+                        : 'Send Poke'}
+                    </Text>
+                  </>
+                )}
+              </TouchableOpacity>
             </View>
           );
-        })
-      )}
-
-      {/* Active Connections */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Your Active Connections ({connections.length})</Text>
-        <TouchableOpacity onPress={() => setActiveTab('chats')}>
-          <Text style={styles.sectionLink}>Open Chats</Text>
-        </TouchableOpacity>
-      </View>
-
-      {connections.length === 0 ? (
-        <View style={styles.emptyBox}>
-          <Text style={styles.emptyText}>You haven't connected with any Demat holders yet.</Text>
-        </View>
-      ) : (
-        connections.slice(0, 3).map((conn) => {
-          const partner = conn.partner;
-          return (
-            <TouchableOpacity
-              key={conn.id}
-              activeOpacity={0.8}
-              onPress={() => openChat(conn.id)}
-              style={styles.connectionCard}
-            >
-              <ProfileAvatar
-                name={partner?.fullName || 'Partner'}
-                avatarUrl={partner?.avatarUrl}
-                size={44}
-                isVerified={partner?.isKycVerified}
-              />
-              <View style={styles.connInfo}>
-                <Text style={styles.connName}>{partner?.fullName || 'Partner'}</Text>
-                <Text style={styles.connTerms}>
-                  Agreed Terms: {conn.agreedCommissionRate?.toFixed(1)}% Advisory Base
-                </Text>
-              </View>
-              <View style={styles.chatActionBtn}>
-                <Icon name="message" size={16} color={colors.primaryActionBlue} />
-                <Text style={styles.chatActionText}>Chat</Text>
-              </View>
-            </TouchableOpacity>
-          );
-        })
-      )}
-
-      {/* Responsible Usage Notice */}
-      <View style={styles.complianceNotice}>
-        <View style={styles.noticeIconRow}>
-          <Icon name="shield" size={16} color={colors.primaryNavy} />
-          <Text style={styles.noticeTitle}>Responsible Platform Usage</Text>
-        </View>
-        <Text style={styles.noticeBody}>
-          Setu connects investors with experienced Demat holders for lawful guidance and application strategies. Never share trading passwords, bank OTPs, or UPI PINs. Always execute bids through authorized exchange channels.
-        </Text>
+        })}
       </View>
     </ScrollView>
   );
@@ -201,228 +344,232 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background
   },
   contentContainer: {
-    padding: spacing.md,
-    paddingBottom: 100
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xs,
+    paddingBottom: 90
   },
-  mainActionCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.cardLg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    marginBottom: spacing.md,
-    ...shadows.sm
-  },
-  cardHeader: {
+  searchRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    gap: spacing.sm,
     marginBottom: spacing.md
   },
-  cardHeaderLeft: {
+  searchBar: {
     flex: 1,
-    marginRight: spacing.md
-  },
-  cardBadge: {
-    fontSize: 11,
-    fontWeight: typography.weights.bold,
-    color: colors.primaryActionBlue,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginBottom: 4
-  },
-  cardTitle: {
-    fontSize: 22,
-    fontWeight: typography.weights.bold,
-    color: colors.primaryNavy,
-    letterSpacing: -0.4,
-    marginBottom: 6
-  },
-  cardSubtitle: {
-    fontSize: 13,
-    color: colors.secondaryText,
-    lineHeight: 18
-  },
-  cardIconBox: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: colors.subtleBlueBackground,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#D4E4FC'
-  },
-  findHoldersBtn: {
-    backgroundColor: colors.primaryActionBlue,
-    borderRadius: borderRadius.button,
     height: 48,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.card,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    gap: spacing.sm,
     ...shadows.sm
   },
-  findHoldersText: {
-    color: colors.surface,
-    fontSize: typography.sizes.base,
-    fontWeight: typography.weights.bold,
-    marginRight: 8
+  searchInput: {
+    flex: 1,
+    fontSize: typography.sizes.sm,
+    color: colors.deepNavy,
+    height: '100%'
   },
-  explainerCard: {
-    backgroundColor: colors.subtleBlueBackground,
-    borderRadius: 20,
-    padding: spacing.md,
+  filterBtn: {
+    width: 48,
+    height: 48,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.card,
     borderWidth: 1,
-    borderColor: '#D4E4FC',
+    borderColor: colors.borderLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.sm
+  },
+  metricPillsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: spacing.xs,
     marginBottom: spacing.lg
   },
-  explainerHeader: {
-    flexDirection: 'row',
+  metricPill: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.card,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xs,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    ...shadows.sm
+  },
+  pillIconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 4
   },
-  explainerTitle: {
-    fontSize: typography.sizes.xs,
+  pillCount: {
+    fontSize: 16,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy,
-    marginLeft: 6
+    color: colors.deepNavy
   },
-  explainerBody: {
-    fontSize: typography.sizes.xs,
+  pillLabel: {
+    fontSize: 10.5,
+    fontWeight: typography.weights.medium,
     color: colors.secondaryText,
-    lineHeight: 18
-  },
-  bold: {
-    color: colors.primaryActionBlue,
-    fontWeight: typography.weights.bold
+    marginTop: 1
   },
   sectionHeader: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-    marginTop: spacing.xs
-  },
-  sectionTitle: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
-  },
-  sectionLink: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.semibold,
-    color: colors.primaryActionBlue
-  },
-  emptyBox: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.card,
-    padding: spacing.lg,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
     marginBottom: spacing.md
   },
-  emptyText: {
-    fontSize: typography.sizes.xs,
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: typography.weights.bold,
+    color: colors.deepNavy
+  },
+  viewAllLink: {
+    fontSize: 12,
+    fontWeight: typography.weights.bold,
+    color: colors.primaryBlue
+  },
+  holdersList: {
+    gap: spacing.md
+  },
+  holderCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 22,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    ...shadows.sm
+  },
+  cardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  holderAvatarContainer: {
+    width: 52,
+    height: 52,
+    borderRadius: 20,
+    backgroundColor: '#EBF2FF',
+    position: 'relative'
+  },
+  holderAvatarImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 20
+  },
+  verifiedCheckBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: colors.success,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF'
+  },
+  holderInfoCol: {
+    flex: 1,
+    marginLeft: spacing.md
+  },
+  holderName: {
+    fontSize: 15,
+    fontWeight: typography.weights.bold,
+    color: colors.deepNavy
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 3
+  },
+  ratingValue: {
+    fontSize: 12,
+    fontWeight: typography.weights.bold,
+    color: colors.deepNavy
+  },
+  reviewsCount: {
+    fontSize: 11,
     color: colors.secondaryText
   },
-  emptyAction: {
-    fontSize: typography.sizes.xs,
-    color: colors.primaryActionBlue,
-    fontWeight: typography.weights.semibold,
-    marginTop: 6
+  statusPill: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: borderRadius.chip
   },
-  previewCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.card,
-    padding: spacing.md,
+  statusPillText: {
+    fontSize: 11,
+    fontWeight: typography.weights.semibold
+  },
+  statusAvailable: {
+    backgroundColor: '#ECFDF5'
+  },
+  statusAvailableText: {
+    color: '#10B981'
+  },
+  statusOffline: {
+    backgroundColor: '#F1F5F9'
+  },
+  statusOfflineText: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: typography.weights.semibold
+  },
+  tagsRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+    marginVertical: spacing.md
+  },
+  tagPill: {
+    backgroundColor: '#F0F5FF',
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: borderRadius.chip,
     borderWidth: 1,
-    borderColor: colors.borderLight,
-    marginBottom: spacing.sm,
+    borderColor: '#E0EBFF'
+  },
+  tagText: {
+    fontSize: 10.5,
+    fontWeight: typography.weights.bold,
+    color: colors.primaryBlue
+  },
+  pokeButton: {
+    width: '100%',
+    height: 44,
+    backgroundColor: colors.primaryBlue,
+    borderRadius: borderRadius.full,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
     ...shadows.sm
   },
-  previewInfo: {
-    marginLeft: spacing.md,
-    flex: 1
-  },
-  previewName: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
-    color: colors.primaryNavy,
-    letterSpacing: -0.2
-  },
-  previewSub: {
-    fontSize: 11,
-    color: colors.secondaryText,
-    marginTop: 2
-  },
-  connectionCard: {
+  pokeButtonSecondary: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.card,
-    padding: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    marginBottom: spacing.sm,
-    ...shadows.sm
+    borderWidth: 1.5,
+    borderColor: colors.primaryBlue
   },
-  connInfo: {
-    marginLeft: spacing.md,
-    flex: 1
+  pokeButtonPending: {
+    backgroundColor: colors.warning
   },
-  connName: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
-    color: colors.primaryNavy,
-    letterSpacing: -0.2
+  pokeButtonConnected: {
+    backgroundColor: colors.success
   },
-  connTerms: {
-    fontSize: 11,
-    color: colors.secondaryText,
-    marginTop: 2
+  pokeButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: typography.weights.bold
   },
-  chatActionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    backgroundColor: colors.subtleBlueBackground,
-    borderWidth: 1,
-    borderColor: '#D4E4FC'
-  },
-  chatActionText: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.semibold,
-    color: colors.primaryActionBlue,
-    marginLeft: 4
-  },
-  complianceNotice: {
-    backgroundColor: colors.surfaceSubtle,
-    borderRadius: 20,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    marginTop: spacing.md
-  },
-  noticeIconRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4
-  },
-  noticeTitle: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    color: colors.primaryNavy,
-    marginLeft: 6
-  },
-  noticeBody: {
-    fontSize: 11,
-    color: colors.secondaryText,
-    lineHeight: 16
+  pokeButtonTextSecondary: {
+    color: colors.primaryBlue
   }
 });

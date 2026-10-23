@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Image } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { borderRadius, spacing, shadows } from '../../theme/spacing';
 import { Icon } from '../common/Icon';
-import { ProfileAvatar } from '../common/ProfileAvatar';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 
@@ -27,26 +26,25 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
   } = useUIStore();
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
 
-  const getGreeting = () => {
-    const hours = new Date().getHours();
-    if (hours < 12) return 'Good morning';
-    if (hours < 17) return 'Good afternoon';
-    return 'Good evening';
+  const getFirstName = () => {
+    if (!user?.fullName) return 'Friend';
+    return user.fullName.trim().split(' ')[0];
   };
 
-  const getRoleBadge = () => {
-    switch (activeRole) {
-      case 'demat_holder':
-        return { label: 'Holder', color: colors.deepNavy, bg: colors.surfaceHighlight };
-      case 'admin':
-        return { label: 'Admin', color: colors.error, bg: colors.errorLight };
-      case 'investor':
-      default:
-        return { label: 'Investor', color: colors.primaryBlue, bg: colors.surfaceHighlight };
+  const getSubtext = () => {
+    if (activeRole === 'investor') {
+      return "Let's find the right connections";
     }
+    if (activeRole === 'demat_holder') {
+      return 'Manage your requests and connections';
+    }
+    return 'Compliance Oversight & Audits';
   };
 
-  const badge = getRoleBadge();
+  const avatarSource =
+    activeRole === 'demat_holder'
+      ? require('../../../assets/holder-avatar.jpg')
+      : require('../../../assets/investor-avatar.jpg');
 
   return (
     <View style={styles.header}>
@@ -56,48 +54,44 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
             <Icon name="chevron-left" size={24} color={colors.deepNavy} />
           </TouchableOpacity>
         ) : (
-          <View style={styles.userProfileRow}>
-            <ProfileAvatar
-              name={user?.fullName || 'User'}
-              avatarUrl={user?.avatarUrl}
-              size={40}
-              isVerified={user?.isKycVerified}
-            />
-            <View style={styles.greetingCol}>
-              <Text style={styles.greetingText}>{getGreeting()}</Text>
-              <Text style={styles.userName} numberOfLines={1}>
-                {user?.fullName || 'Setu'}
-              </Text>
+          <TouchableOpacity
+            style={styles.userProfileRow}
+            activeOpacity={0.85}
+            onPress={() => setRoleSwitcherOpen(true)}
+          >
+            {/* 3D Character Avatar matching reference */}
+            <View style={styles.avatarWrapper}>
+              <Image source={avatarSource} style={styles.avatarImg} resizeMode="cover" />
             </View>
-          </View>
+
+            <View style={styles.greetingCol}>
+              <Text style={styles.userName}>Hello, {getFirstName()}</Text>
+              <Text style={styles.greetingSub}>{getSubtext()}</Text>
+            </View>
+          </TouchableOpacity>
         )}
       </View>
 
       <View style={styles.rightContainer}>
-        {/* Role Pill Switcher */}
+        {/* Subtle Role Switcher Pill */}
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => setRoleSwitcherOpen(true)}
-          style={[styles.rolePill, { backgroundColor: badge.bg }]}
+          style={styles.rolePill}
         >
-          <Text style={[styles.roleText, { color: badge.color }]}>{badge.label}</Text>
-          <Icon name="sliders" size={11} color={badge.color} />
+          <Text style={styles.rolePillText}>
+            {activeRole === 'investor' ? 'Investor' : activeRole === 'demat_holder' ? 'Holder' : 'Admin'}
+          </Text>
         </TouchableOpacity>
 
-        {/* Circular Notification Bell */}
+        {/* Notification Bell with Red Dot Badge */}
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => setNotificationsOpen(true)}
           style={styles.notifCircle}
         >
-          <Icon name="bell" size={18} color={colors.deepNavy} />
-          {unreadNotificationsCount > 0 && (
-            <View style={styles.notifBadge}>
-              <Text style={styles.notifBadgeText}>
-                {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
-              </Text>
-            </View>
-          )}
+          <Icon name="bell" size={20} color={colors.deepNavy} strokeWidth={1.8} />
+          <View style={styles.redDot} />
         </TouchableOpacity>
       </View>
 
@@ -114,9 +108,9 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
           onPress={() => setRoleSwitcherOpen(false)}
         >
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Role & Experience Switcher</Text>
+            <Text style={styles.modalTitle}>Switch Experience</Text>
             <Text style={styles.modalDesc}>
-              Preview how Setu functions across each user journey:
+              Preview and interact as either an Investor, Demat Holder, or Compliance Admin:
             </Text>
 
             <TouchableOpacity
@@ -206,7 +200,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingTop: 4
+    paddingTop: 8,
+    paddingBottom: 4
   },
   leftContainer: {
     flexDirection: 'row',
@@ -214,8 +209,8 @@ const styles = StyleSheet.create({
     flex: 1
   },
   backButton: {
-    width: 40,
-    height: 40,
+    width: 38,
+    height: 38,
     borderRadius: borderRadius.full,
     backgroundColor: colors.surface,
     alignItems: 'center',
@@ -229,41 +224,55 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1
   },
+  avatarWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    overflow: 'hidden',
+    backgroundColor: '#EBF2FF',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+    ...shadows.sm
+  },
+  avatarImg: {
+    width: '100%',
+    height: '100%'
+  },
   greetingCol: {
     marginLeft: spacing.sm,
     flex: 1
   },
-  greetingText: {
-    fontSize: typography.sizes.xs,
-    color: colors.secondaryText,
-    fontWeight: typography.weights.medium
-  },
   userName: {
-    fontSize: typography.sizes.md,
+    fontSize: 16,
     fontWeight: typography.weights.bold,
     color: colors.deepNavy,
     letterSpacing: -0.2
   },
+  greetingSub: {
+    fontSize: 11,
+    color: colors.secondaryText,
+    fontWeight: typography.weights.medium,
+    marginTop: 1
+  },
   rightContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm
+    gap: spacing.xs
   },
   rolePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 5,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.chip,
-    gap: 4
+    backgroundColor: colors.surfaceHighlight,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: borderRadius.chip
   },
-  roleText: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.semibold
+  rolePillText: {
+    fontSize: 10,
+    fontWeight: typography.weights.bold,
+    color: colors.primaryBlue
   },
   notifCircle: {
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     borderRadius: borderRadius.full,
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -273,22 +282,16 @@ const styles = StyleSheet.create({
     position: 'relative',
     ...shadows.sm
   },
-  notifBadge: {
+  redDot: {
     position: 'absolute',
-    top: 3,
-    right: 3,
-    backgroundColor: colors.error,
-    borderRadius: 7,
-    minWidth: 14,
-    height: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 2
-  },
-  notifBadgeText: {
-    color: colors.surface,
-    fontSize: 8,
-    fontWeight: typography.weights.bold
+    top: 9,
+    right: 10,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#EF4444',
+    borderWidth: 1,
+    borderColor: '#FFFFFF'
   },
   modalOverlay: {
     flex: 1,

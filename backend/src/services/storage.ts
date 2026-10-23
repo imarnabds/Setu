@@ -1,3 +1,10 @@
+/**
+ * @deprecated ARCHIVED JSON PERSISTENCE SERVICE
+ * Setu has migrated to MongoDB Atlas / MongoDB as its sole authoritative production database.
+ * No production controllers or services import or call this service.
+ * Retained strictly for legacy backup/reference and offline export scripts.
+ */
+
 import fs from 'fs';
 import path from 'path';
 import {

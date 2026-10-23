@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { storage } from '../services/storage.js';
+import { dbService } from '../services/dbService.js';
 import { AuthenticatedRequest } from '../middleware/auth.js';
 import {
   pokeCreateSchema,
@@ -32,7 +32,7 @@ export const sendPoke = async (
       return;
     }
 
-    const { recipientId, message, proposedCommissionRate, commissionBasis } =
+    const { recipientId, ipoId, message, proposedCommissionRate, commissionBasis } =
       parseResult.data;
 
     // Disallow self-poke
@@ -42,29 +42,47 @@ export const sendPoke = async (
     }
 
     // Verify recipient exists
-    const recipient = storage.findUserById(recipientId);
+    const recipient = await dbService.findUserById(recipientId);
     if (!recipient) {
       res.status(404).json({ success: false, error: 'Recipient user not found' });
       return;
     }
 
-    // Check if active pending request already exists
-    const existingActivePoke = storage.findActivePokeBetween(req.user.id, recipientId);
+    // Resolve target IPO from DB (fallback to first available if not explicitly provided)
+    let targetIpo = ipoId ? await dbService.findIpoById(ipoId) : null;
+    if (!targetIpo) {
+      const allIpos = await dbService.getAllIpos();
+      targetIpo = allIpos[0] || null;
+    }
+
+    const resolvedIpoId = targetIpo?.id || 'ipo_jio_platforms';
+    const resolvedIpoName = targetIpo?.name || 'Jio Platforms IPO';
+
+    // Check if active pending request already exists for this IPO
+    const existingActivePoke = await dbService.findActivePokeBetween(
+      req.user.id,
+      recipientId,
+      resolvedIpoId
+    );
     if (existingActivePoke) {
       res.status(409).json({
         success: false,
-        error: 'A pending Poke request already exists between you and this user',
+        error: `A pending Poke request already exists for ${resolvedIpoName} between you and this user`,
         data: existingActivePoke
       });
       return;
     }
 
-    // Check if users already have an active connection
-    const existingConnection = storage.findConnectionBetweenUsers(req.user.id, recipientId);
+    // Check if users already have an active connection for this IPO
+    const existingConnection = await dbService.findConnectionBetweenUsers(
+      req.user.id,
+      recipientId,
+      resolvedIpoId
+    );
     if (existingConnection && existingConnection.status === 'active') {
       res.status(409).json({
         success: false,
-        error: 'You already have an active connection with this user'
+        error: `You already have an active connection with this user for ${resolvedIpoName}`
       });
       return;
     }
@@ -76,6 +94,8 @@ export const sendPoke = async (
       recipientId,
       senderRole: req.user.primaryRole,
       recipientRole: recipient.primaryRole,
+      ipoId: resolvedIpoId,
+      ipoName: resolvedIpoName,
       status: 'pending',
       proposedCommissionRate:
         proposedCommissionRate !== undefined
@@ -93,10 +113,10 @@ export const sendPoke = async (
       updatedAt: now
     };
 
-    storage.createPoke(newPoke);
+    await dbService.createPoke(newPoke);
 
     // Create recipient notification
-    storage.createNotification({
+    await dbService.createNotification({
       id: createId('notif'),
       userId: recipientId,
       title: 'New Poke Received',
@@ -120,7 +140,7 @@ export const sendPoke = async (
     });
 
     // Audit log
-    storage.createAuditLog({
+    await dbService.createAuditLog({
       id: createId('aud'),
       actorId: req.user.id,
       action: 'POKE_SENT',
@@ -150,8 +170,8 @@ export const cancelPoke = async (
       return;
     }
 
-    const { id } = req.params;
-    const poke = storage.findPokeById(id);
+    const id = req.params.id as string;
+    const poke = await dbService.findPokeById(id);
 
     if (!poke) {
       res.status(404).json({ success: false, error: 'Poke request not found' });
@@ -172,14 +192,14 @@ export const cancelPoke = async (
     }
 
     const now = new Date().toISOString();
-    const updated = storage.updatePoke(id, {
+    const updated = await dbService.updatePoke(id, {
       status: 'cancelled',
       cancelledAt: now
     });
 
     socketService.sendToUser(poke.recipientId, 'poke:cancelled', { pokeId: id });
 
-    storage.createAuditLog({
+    await dbService.createAuditLog({
       id: createId('aud'),
       actorId: req.user.id,
       action: 'POKE_CANCELLED',
@@ -208,8 +228,8 @@ export const acceptPoke = async (
       return;
     }
 
-    const { id } = req.params;
-    const poke = storage.findPokeById(id);
+    const id = req.params.id as string;
+    const poke = await dbService.findPokeById(id);
 
     if (!poke) {
       res.status(404).json({ success: false, error: 'Poke request not found' });
@@ -242,26 +262,46 @@ export const acceptPoke = async (
     const { agreedCommissionRate, agreedCommissionBasis } = parseResult.data;
     const now = new Date().toISOString();
 
-    // Update poke
-    const updatedPoke = storage.updatePoke(id, {
-      status: 'accepted',
+    // Atomic conditional update to prevent double acceptance race conditions
+    const updatedPoke = await dbService.acceptPokeConditionally(
+      id,
+      req.user.id,
       agreedCommissionRate,
       agreedCommissionBasis,
-      acceptedAt: now
-    });
+      now
+    );
 
-    // Check or create connection
-    let connection = storage.findConnectionBetweenUsers(poke.senderId, poke.recipientId);
+    if (!updatedPoke) {
+      res.status(409).json({
+        success: false,
+        error: 'Poke acceptance collision: request was already accepted or modified.'
+      });
+      return;
+    }
+
+    // Check or create connection atomically for this specific IPO
+    const targetIpoId = poke.ipoId || 'ipo_jio_platforms';
+    const targetIpoName = poke.ipoName || 'Jio Platforms IPO';
+
+    let connection = await dbService.findConnectionBetweenUsers(
+      poke.senderId,
+      poke.recipientId,
+      targetIpoId
+    );
     if (connection) {
-      connection = storage.updateConnection(connection.id, {
+      connection = await dbService.updateConnection(connection.id, {
         status: 'active',
         agreedCommissionRate,
         agreedCommissionBasis,
-        pokeRequestId: id
+        pokeRequestId: id,
+        ipoId: targetIpoId,
+        ipoName: targetIpoName
       });
     } else {
       const newConnection: Connection = {
         id: createId('conn'),
+        ipoId: targetIpoId,
+        ipoName: targetIpoName,
         userAId: req.user.primaryRole === 'demat_holder' ? req.user.id : poke.senderId,
         userBId: req.user.primaryRole === 'demat_holder' ? poke.senderId : req.user.id,
         pokeRequestId: id,
@@ -271,7 +311,7 @@ export const acceptPoke = async (
         createdAt: now,
         updatedAt: now
       };
-      connection = storage.createConnection(newConnection);
+      connection = await dbService.createConnection(newConnection);
     }
 
     // Insert initial legal & terms notice system message
@@ -289,10 +329,10 @@ export const acceptPoke = async (
       },
       createdAt: now
     };
-    storage.createMessage(systemNotice);
+    await dbService.createMessage(systemNotice);
 
     // Create sender notification
-    storage.createNotification({
+    await dbService.createNotification({
       id: createId('notif'),
       userId: poke.senderId,
       title: 'Poke Accepted!',
@@ -317,7 +357,7 @@ export const acceptPoke = async (
 
     socketService.sendToConnection(connection!.id, 'message:new', systemNotice);
 
-    storage.createAuditLog({
+    await dbService.createAuditLog({
       id: createId('aud'),
       actorId: req.user.id,
       action: 'POKE_ACCEPTED',
@@ -355,8 +395,8 @@ export const rejectPoke = async (
       return;
     }
 
-    const { id } = req.params;
-    const poke = storage.findPokeById(id);
+    const id = req.params.id as string;
+    const poke = await dbService.findPokeById(id);
 
     if (!poke) {
       res.status(404).json({ success: false, error: 'Poke request not found' });
@@ -380,14 +420,14 @@ export const rejectPoke = async (
     const rejectionReason = parseResult.success ? parseResult.data.rejectionReason : undefined;
     const now = new Date().toISOString();
 
-    const updated = storage.updatePoke(id, {
+    const updated = await dbService.updatePoke(id, {
       status: 'rejected',
       rejectionReason,
       rejectedAt: now
     });
 
     // Notify sender respectfully without leaking sensitive internal notes
-    storage.createNotification({
+    await dbService.createNotification({
       id: createId('notif'),
       userId: poke.senderId,
       title: 'Poke Declined',
@@ -400,7 +440,7 @@ export const rejectPoke = async (
 
     socketService.sendToUser(poke.senderId, 'poke:rejected', { pokeId: id });
 
-    storage.createAuditLog({
+    await dbService.createAuditLog({
       id: createId('aud'),
       actorId: req.user.id,
       action: 'POKE_REJECTED',
@@ -429,39 +469,42 @@ export const getMyPokes = async (
       return;
     }
 
-    const pokes = storage.findPokesForUser(req.user.id);
+    const ipoId = (req.query.ipoId as string) || undefined;
+    const pokes = await dbService.findPokesForUser(req.user.id, ipoId);
 
-    // Populate sender and recipient
-    const populated = pokes.map((p) => {
-      const sender = storage.findUserById(p.senderId);
-      const recipient = storage.findUserById(p.recipientId);
+    // Populate sender and recipient with strict public profiles (no email/phone PII)
+    const populated = await Promise.all(
+      pokes.map(async (p) => {
+        const sender = await dbService.findUserById(p.senderId);
+        const recipient = await dbService.findUserById(p.recipientId);
 
-      return {
-        ...p,
-        sender: sender
-          ? {
-              id: sender.id,
-              fullName: sender.fullName,
-              avatarUrl: sender.avatarUrl,
-              city: sender.city,
-              region: sender.region,
-              role: sender.primaryRole,
-              isKycVerified: sender.isKycVerified
-            }
-          : null,
-        recipient: recipient
-          ? {
-              id: recipient.id,
-              fullName: recipient.fullName,
-              avatarUrl: recipient.avatarUrl,
-              city: recipient.city,
-              region: recipient.region,
-              role: recipient.primaryRole,
-              isKycVerified: recipient.isKycVerified
-            }
-          : null
-      };
-    });
+        return {
+          ...p,
+          sender: sender
+            ? {
+                id: sender.id,
+                fullName: sender.fullName,
+                avatarUrl: sender.avatarUrl,
+                city: sender.city,
+                region: sender.region,
+                role: sender.primaryRole,
+                isKycVerified: sender.isKycVerified
+              }
+            : null,
+          recipient: recipient
+            ? {
+                id: recipient.id,
+                fullName: recipient.fullName,
+                avatarUrl: recipient.avatarUrl,
+                city: recipient.city,
+                region: recipient.region,
+                role: recipient.primaryRole,
+                isKycVerified: recipient.isKycVerified
+              }
+            : null
+        };
+      })
+    );
 
     // Sort by newest
     populated.sort(

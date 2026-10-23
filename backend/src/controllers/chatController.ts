@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { storage } from '../services/storage.js';
+import { dbService } from '../services/dbService.js';
 import { AuthenticatedRequest } from '../middleware/auth.js';
 import { sendMessageSchema } from '../validators/schemas.js';
 import { socketService } from '../services/socketService.js';
@@ -18,8 +18,8 @@ export const getMessages = async (
       return;
     }
 
-    const { connectionId } = req.params;
-    const connection = storage.findConnectionById(connectionId);
+    const connectionId = req.params.connectionId as string;
+    const connection = await dbService.findConnectionById(connectionId);
 
     if (!connection) {
       res.status(404).json({ success: false, error: 'Connection not found' });
@@ -32,9 +32,9 @@ export const getMessages = async (
     }
 
     // Auto mark incoming messages as read
-    storage.markMessagesAsRead(connectionId, req.user.id);
+    await dbService.markMessagesAsRead(connectionId, req.user.id);
 
-    const messages = storage.getMessagesForConnection(connectionId);
+    const messages = await dbService.getMessagesForConnection(connectionId);
 
     res.json({
       success: true,
@@ -66,7 +66,7 @@ export const sendMessage = async (
     }
 
     const { connectionId, content } = parseResult.data;
-    const connection = storage.findConnectionById(connectionId);
+    const connection = await dbService.findConnectionById(connectionId);
 
     if (!connection) {
       res.status(404).json({ success: false, error: 'Connection not found' });
@@ -100,10 +100,10 @@ export const sendMessage = async (
       createdAt: now
     };
 
-    storage.createMessage(newMessage);
+    await dbService.createMessage(newMessage);
 
     // Update connection touch
-    storage.updateConnection(connectionId, { updatedAt: now });
+    await dbService.updateConnection(connectionId, { updatedAt: now });
 
     // Real-time broadcast to room and receiver
     socketService.sendToConnection(connectionId, 'message:new', newMessage);
@@ -118,7 +118,7 @@ export const sendMessage = async (
 
     // Create notification for receiver
     const preview = content.length > 60 ? content.substring(0, 57) + '...' : content;
-    storage.createNotification({
+    await dbService.createNotification({
       id: createId('notif'),
       userId: receiverId,
       title: req.user.fullName,
@@ -149,8 +149,8 @@ export const markAsRead = async (
       return;
     }
 
-    const { connectionId } = req.params;
-    storage.markMessagesAsRead(connectionId, req.user.id);
+    const connectionId = req.params.connectionId as string;
+    await dbService.markMessagesAsRead(connectionId, req.user.id);
 
     res.json({
       success: true,

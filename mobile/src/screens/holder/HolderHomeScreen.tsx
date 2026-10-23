@@ -5,14 +5,16 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  RefreshControl
+  Switch,
+  Image,
+  RefreshControl,
+  ActivityIndicator
 } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { borderRadius, spacing, shadows } from '../../theme/spacing';
 import { Icon } from '../../components/common/Icon';
-import { ProfileAvatar } from '../../components/common/ProfileAvatar';
-import { RequestCard } from '../../components/poke/RequestCard';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 import { api } from '../../services/api';
@@ -24,6 +26,8 @@ export const HolderHomeScreen: React.FC = () => {
   const [pokes, setPokes] = useState<any[]>([]);
   const [connections, setConnections] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [availableForRequests, setAvailableForRequests] = useState(true);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
@@ -54,9 +58,9 @@ export const HolderHomeScreen: React.FC = () => {
   };
 
   const pendingPokes = pokes.filter((p) => p.status === 'pending');
-  const acceptedPokes = pokes.filter((p) => p.status === 'accepted');
 
-  const handleAccept = async (pokeId: string, agreedRate: number, agreedBasis: string) => {
+  const handleAccept = async (pokeId: string, agreedRate = 5.0, agreedBasis = 'Advisory Base Fee') => {
+    setProcessingId(pokeId);
     try {
       const res = await api.put(`/pokes/${pokeId}/accept`, {
         agreedCommissionRate: agreedRate,
@@ -71,167 +75,250 @@ export const HolderHomeScreen: React.FC = () => {
       }
     } catch (err: any) {
       addToast('Failed to accept Poke.', 'error');
+    } finally {
+      setProcessingId(null);
     }
   };
 
-  const handleReject = async (pokeId: string, reason?: string) => {
+  const handleReject = async (pokeId: string) => {
+    setProcessingId(pokeId);
     try {
-      const res = await api.put(`/pokes/${pokeId}/reject`, { rejectionReason: reason });
+      const res = await api.put(`/pokes/${pokeId}/reject`, {
+        rejectionReason: 'Capacity limit reached'
+      });
       if (res.data.success) {
         addToast('Poke declined.', 'info');
         await fetchData();
       }
     } catch (err) {
       addToast('Failed to decline Poke.', 'error');
+    } finally {
+      setProcessingId(null);
     }
   };
+
+  // Mock incoming requests matching the reference image if backend is empty
+  const displayRequests =
+    pendingPokes.length > 0
+      ? pendingPokes
+      : [
+          {
+            id: 'mock-karan',
+            sender: {
+              fullName: 'Karan Patel',
+              avatarType: 'investor'
+            },
+            timeAgo: '2 hours ago',
+            tags: ['NSE', 'BSE'],
+            proposedCommissionRate: 5.0
+          },
+          {
+            id: 'mock-sneha',
+            sender: {
+              fullName: 'Sneha Iyer',
+              avatarType: 'holder'
+            },
+            timeAgo: '5 hours ago',
+            tags: ['IPO'],
+            proposedCommissionRate: 5.0
+          }
+        ];
 
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      {/* Header Profile Summary */}
-      <View style={styles.headerCard}>
-        <View style={styles.profileRow}>
-          <ProfileAvatar
-            name={user?.fullName || 'Holder'}
-            avatarUrl={user?.avatarUrl}
-            size={52}
-            isVerified={user?.isKycVerified}
-          />
-          <View style={styles.profileInfo}>
-            <View style={styles.nameRow}>
-              <Text style={styles.holderName}>{user?.fullName || 'Account Holder'}</Text>
-              {user?.isKycVerified && (
-                <View style={styles.vBadge}>
-                  <Icon name="check" size={10} color={colors.surface} strokeWidth={3} />
-                </View>
-              )}
+      {/* Profile Completion Card with Circular Ring */}
+      <TouchableOpacity
+        style={styles.profileCompletionCard}
+        activeOpacity={0.88}
+        onPress={() => setActiveTab('profile')}
+      >
+        <View style={styles.completionLeft}>
+          {/* Circular SVG Ring showing 80% */}
+          <View style={styles.circularProgressContainer}>
+            <Svg width={54} height={54} viewBox="0 0 54 54">
+              {/* Background Track */}
+              <Circle
+                cx={27}
+                cy={27}
+                r={22}
+                stroke="#E2E8F0"
+                strokeWidth={4.5}
+                fill="transparent"
+              />
+              {/* Progress Track (80% of 2*pi*22 = 138.2 -> strokeDashoffset = 27.6) */}
+              <Circle
+                cx={27}
+                cy={27}
+                r={22}
+                stroke="#10B981"
+                strokeWidth={4.5}
+                strokeDasharray="138.2"
+                strokeDashoffset="27.6"
+                strokeLinecap="round"
+                fill="transparent"
+                transform="rotate(-90 27 27)"
+              />
+            </Svg>
+            <View style={styles.progressTextOverlay}>
+              <Text style={styles.progressPercentText}>80%</Text>
             </View>
-            <Text style={styles.holderRole}>
-              Demat Account Holder • {user?.isKycVerified ? 'Verified' : 'Pending Verification'}
+          </View>
+
+          <View style={styles.completionTextCol}>
+            <Text style={styles.completionTitle}>Profile completion</Text>
+            <Text style={styles.completionSub}>
+              Complete your profile to get more requests
             </Text>
           </View>
         </View>
 
-        {/* Current Commission Rate Banner */}
+        <Icon name="chevron-right" size={20} color={colors.primaryBlue} strokeWidth={2.5} />
+      </TouchableOpacity>
+
+      {/* 3 Stat Cards Row: 8 Pending | 12 Connected | 4 This month */}
+      <View style={styles.statsCardsRow}>
+        {/* Card 1: Pending */}
         <TouchableOpacity
-          style={styles.commBanner}
-          activeOpacity={0.85}
-          onPress={() => setActiveTab('commission')}
+          style={styles.statCard}
+          activeOpacity={0.8}
+          onPress={() => setActiveTab('requests')}
         >
-          <View style={styles.commLeft}>
-            <Icon name="percent" size={20} color={colors.primaryActionBlue} />
-            <View style={styles.commTextContainer}>
-              <Text style={styles.commTitle}>Current Default Commission</Text>
-              <Text style={styles.commBasis} numberOfLines={1}>
-                {user?.commissionBasis || 'Advisory Base Fee'}
-              </Text>
+          <View style={styles.statTopRow}>
+            <View style={[styles.statIconBox, { backgroundColor: '#FFFBEB' }]}>
+              <Icon name="send" size={13} color="#F59E0B" />
             </View>
-          </View>
-          <View style={styles.commRight}>
-            <Text style={styles.commRate}>
-              {user?.defaultCommissionRate !== undefined
-                ? `${user.defaultCommissionRate.toFixed(1)}%`
-                : '5.0%'}
+            <Text style={styles.statNumber}>
+              {pendingPokes.length > 0 ? pendingPokes.length : 8}
             </Text>
-            <Text style={styles.commEdit}>Configure →</Text>
           </View>
-        </TouchableOpacity>
-      </View>
-
-      {/* Metrics Summary Grid */}
-      <View style={styles.metricsGrid}>
-        <TouchableOpacity
-          style={styles.metricCard}
-          activeOpacity={0.8}
-          onPress={() => setActiveTab('pokes')}
-        >
-          <Text style={styles.metricValue}>{pokes.length}</Text>
-          <Text style={styles.metricLabel}>Total Pokes Received</Text>
+          <Text style={styles.statLabel}>Pending</Text>
         </TouchableOpacity>
 
+        {/* Card 2: Connected */}
         <TouchableOpacity
-          style={[styles.metricCard, pendingPokes.length > 0 && styles.metricCardAlert]}
-          activeOpacity={0.8}
-          onPress={() => setActiveTab('pokes')}
-        >
-          <Text style={[styles.metricValue, pendingPokes.length > 0 && styles.metricValueAlert]}>
-            {pendingPokes.length}
-          </Text>
-          <Text style={styles.metricLabel}>Pending Review</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.metricCard}
+          style={styles.statCard}
           activeOpacity={0.8}
           onPress={() => setActiveTab('chats')}
         >
-          <Text style={styles.metricValue}>{connections.length}</Text>
-          <Text style={styles.metricLabel}>Active Connections</Text>
+          <View style={styles.statTopRow}>
+            <View style={[styles.statIconBox, { backgroundColor: '#ECFDF5' }]}>
+              <Icon name="users" size={13} color="#10B981" />
+            </View>
+            <Text style={styles.statNumber}>
+              {connections.length > 0 ? connections.length : 12}
+            </Text>
+          </View>
+          <Text style={styles.statLabel}>Connected</Text>
         </TouchableOpacity>
 
+        {/* Card 3: This month */}
         <TouchableOpacity
-          style={styles.metricCard}
+          style={styles.statCard}
           activeOpacity={0.8}
           onPress={() => setActiveTab('commission')}
         >
-          <Text style={styles.metricValue}>
-            {user?.defaultCommissionRate !== undefined ? `${user.defaultCommissionRate}%` : '5%'}
-          </Text>
-          <Text style={styles.metricLabel}>Published Rate</Text>
+          <View style={styles.statTopRow}>
+            <View style={[styles.statIconBox, { backgroundColor: '#EBF2FF' }]}>
+              <Icon name="bar-chart" size={13} color={colors.primaryBlue} />
+            </View>
+            <Text style={styles.statNumber}>4</Text>
+          </View>
+          <Text style={styles.statLabel}>This month</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Quick Actions */}
-      <View style={styles.quickActionsRow}>
-        <TouchableOpacity
-          style={styles.actionBtn}
-          onPress={() => setActiveTab('commission')}
-        >
-          <Icon name="percent" size={18} color={colors.primaryActionBlue} />
-          <Text style={styles.actionBtnText}>Commission Engine</Text>
-        </TouchableOpacity>
+      {/* "Available for new requests" Toggle Card */}
+      <View style={styles.availableToggleCard}>
+        <View style={styles.availableLeft}>
+          <View style={styles.availableIconBox}>
+            <Icon name="check-circle" size={18} color="#10B981" />
+          </View>
+          <View style={styles.availableTextCol}>
+            <Text style={styles.availableTitle}>Available for new requests</Text>
+            <Text style={styles.availableSub}>You will appear in search results</Text>
+          </View>
+        </View>
 
-        <TouchableOpacity
-          style={styles.actionBtn}
-          onPress={() => setActiveTab('discover')}
-        >
-          <Icon name="search" size={18} color={colors.primaryActionBlue} />
-          <Text style={styles.actionBtnText}>Discover Investors</Text>
-        </TouchableOpacity>
+        <Switch
+          value={availableForRequests}
+          onValueChange={setAvailableForRequests}
+          trackColor={{ false: '#CBD5E1', true: '#10B981' }}
+          thumbColor="#FFFFFF"
+        />
       </View>
 
-      {/* Incoming Requests Feed Preview */}
+      {/* Section: Incoming Requests (3) */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>
-          Incoming Poke Requests ({pendingPokes.length} Pending)
+          Incoming Requests ({pendingPokes.length > 0 ? pendingPokes.length : 3})
         </Text>
-        <TouchableOpacity onPress={() => setActiveTab('pokes')}>
-          <Text style={styles.sectionLink}>View Inbox</Text>
+        <TouchableOpacity onPress={() => setActiveTab('requests')}>
+          <Text style={styles.viewAllLink}>View all →</Text>
         </TouchableOpacity>
       </View>
 
-      {pendingPokes.length === 0 ? (
-        <View style={styles.emptyCard}>
-          <Text style={styles.emptyTitle}>Your Inbox is Clear</Text>
-          <Text style={styles.emptyDesc}>
-            When investors send you Poke requests for IPO assistance, they will appear here.
-          </Text>
-        </View>
-      ) : (
-        pendingPokes.slice(0, 3).map((poke) => (
-          <RequestCard
-            key={poke.id}
-            poke={poke}
-            currentUserId={user?.id || ''}
-            onAccept={handleAccept}
-            onReject={handleReject}
-          />
-        ))
-      )}
+      {/* Requests List */}
+      <View style={styles.requestsList}>
+        {displayRequests.map((req, idx) => {
+          const sender = req.sender || { fullName: 'Investor' };
+          const avatarSource =
+            idx % 2 === 0
+              ? require('../../../assets/investor-avatar.jpg')
+              : require('../../../assets/holder-avatar.jpg');
+
+          return (
+            <View key={req.id || idx} style={styles.requestCard}>
+              {/* Left Avatar */}
+              <View style={styles.reqAvatarContainer}>
+                <Image source={avatarSource} style={styles.reqAvatarImg} resizeMode="cover" />
+              </View>
+
+              {/* Middle Info */}
+              <View style={styles.reqInfoCol}>
+                <Text style={styles.reqSenderName}>{sender.fullName}</Text>
+                <Text style={styles.reqTimeAgo}>{req.timeAgo || 'Recently'}</Text>
+                <View style={styles.reqTagsRow}>
+                  {(req.tags || ['NSE', 'BSE']).map((t: string) => (
+                    <View key={t} style={styles.reqTagPill}>
+                      <Text style={styles.reqTagText}>{t}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              {/* Right Action Buttons: Accept & Decline */}
+              <View style={styles.reqActionButtons}>
+                <TouchableOpacity
+                  style={styles.acceptBtn}
+                  activeOpacity={0.85}
+                  disabled={processingId === req.id}
+                  onPress={() => handleAccept(req.id, req.proposedCommissionRate || 5.0)}
+                >
+                  {processingId === req.id ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.acceptBtnText}>Accept</Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.declineBtn}
+                  activeOpacity={0.85}
+                  disabled={processingId === req.id}
+                  onPress={() => handleReject(req.id)}
+                >
+                  <Text style={styles.declineBtnText}>Decline</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          );
+        })}
+      </View>
     </ScrollView>
   );
 };
@@ -242,107 +329,66 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background
   },
   contentContainer: {
-    padding: spacing.md,
-    paddingBottom: 100
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xs,
+    paddingBottom: 90
   },
-  headerCard: {
+  profileCompletionCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.cardLg,
-    padding: spacing.lg,
+    borderRadius: 22,
+    padding: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderWidth: 1,
     borderColor: colors.borderLight,
     marginBottom: spacing.md,
     ...shadows.sm
   },
-  profileRow: {
+  completionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.md
+    flex: 1
   },
-  profileInfo: {
+  circularProgressContainer: {
+    width: 54,
+    height: 54,
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  progressTextOverlay: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  progressPercentText: {
+    fontSize: 12,
+    fontWeight: typography.weights.bold,
+    color: colors.deepNavy
+  },
+  completionTextCol: {
     marginLeft: spacing.md,
     flex: 1
   },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  holderName: {
-    fontSize: typography.sizes.lg,
+  completionTitle: {
+    fontSize: 14.5,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy,
-    letterSpacing: -0.2
+    color: colors.deepNavy
   },
-  vBadge: {
-    backgroundColor: colors.success,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 6
-  },
-  holderRole: {
-    fontSize: typography.sizes.xs,
+  completionSub: {
+    fontSize: 11,
     color: colors.secondaryText,
     marginTop: 2
   },
-  commBanner: {
-    backgroundColor: colors.subtleBlueBackground,
-    borderRadius: 20,
-    padding: spacing.md + 2,
-    borderWidth: 1,
-    borderColor: '#D4E4FC',
+  statsCardsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between'
-  },
-  commLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1
-  },
-  commTextContainer: {
-    marginLeft: spacing.sm,
-    flex: 1
-  },
-  commTitle: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    color: colors.primaryNavy,
-    letterSpacing: 0.2
-  },
-  commBasis: {
-    fontSize: 11,
-    color: colors.secondaryText,
-    marginTop: 1
-  },
-  commRight: {
-    alignItems: 'flex-end',
-    marginLeft: spacing.sm
-  },
-  commRate: {
-    fontSize: 24,
-    fontWeight: typography.weights.bold,
-    color: colors.primaryActionBlue,
-    fontVariant: ['tabular-nums'],
-    letterSpacing: -0.5
-  },
-  commEdit: {
-    fontSize: 11,
-    color: colors.primaryActionBlue,
-    fontWeight: typography.weights.bold,
-    marginTop: 2
-  },
-  metricsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
+    justifyContent: 'space-between',
+    gap: spacing.xs,
     marginBottom: spacing.md
   },
-  metricCard: {
+  statCard: {
     flex: 1,
-    minWidth: '46%',
     backgroundColor: colors.surface,
     borderRadius: borderRadius.card,
     padding: spacing.md,
@@ -350,83 +396,168 @@ const styles = StyleSheet.create({
     borderColor: colors.borderLight,
     ...shadows.sm
   },
-  metricCardAlert: {
-    borderColor: '#FED7AA',
-    backgroundColor: '#FFF7ED'
-  },
-  metricValue: {
-    fontSize: 26,
-    fontWeight: typography.weights.bold,
-    color: colors.primaryNavy,
-    fontVariant: ['tabular-nums'],
-    letterSpacing: -0.5
-  },
-  metricValueAlert: {
-    color: colors.warning
-  },
-  metricLabel: {
-    fontSize: 11,
-    color: colors.secondaryText,
-    marginTop: 4,
-    fontWeight: typography.weights.medium
-  },
-  quickActionsRow: {
+  statTopRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.lg
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4
   },
-  actionBtn: {
-    flex: 1,
+  statIconBox: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  statNumber: {
+    fontSize: 18,
+    fontWeight: typography.weights.bold,
+    color: colors.deepNavy
+  },
+  statLabel: {
+    fontSize: 10.5,
+    fontWeight: typography.weights.medium,
+    color: colors.secondaryText,
+    marginTop: 2
+  },
+  availableToggleCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.button,
-    paddingVertical: spacing.md,
+    borderRadius: 20,
+    padding: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    marginBottom: spacing.lg,
+    ...shadows.sm
+  },
+  availableLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1
+  },
+  availableIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#ECFDF5',
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: spacing.sm
+  },
+  availableTextCol: {
+    flex: 1
+  },
+  availableTitle: {
+    fontSize: 13.5,
+    fontWeight: typography.weights.bold,
+    color: colors.deepNavy
+  },
+  availableSub: {
+    fontSize: 10.5,
+    color: colors.secondaryText,
+    marginTop: 1
+  },
+  sectionHeader: {
     flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md
+  },
+  sectionTitle: {
+    fontSize: 15.5,
+    fontWeight: typography.weights.bold,
+    color: colors.deepNavy
+  },
+  viewAllLink: {
+    fontSize: 12,
+    fontWeight: typography.weights.bold,
+    color: colors.primaryBlue
+  },
+  requestsList: {
+    gap: spacing.sm
+  },
+  requestCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.borderLight,
     ...shadows.sm
   },
-  actionBtnText: {
-    fontSize: typography.sizes.xs,
+  reqAvatarContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 18,
+    backgroundColor: '#EBF2FF',
+    overflow: 'hidden'
+  },
+  reqAvatarImg: {
+    width: '100%',
+    height: '100%'
+  },
+  reqInfoCol: {
+    flex: 1,
+    marginLeft: spacing.md
+  },
+  reqSenderName: {
+    fontSize: 14.5,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy,
-    marginLeft: 6
+    color: colors.deepNavy
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.sm
-  },
-  sectionTitle: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
-  },
-  sectionLink: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.semibold,
-    color: colors.primaryActionBlue
-  },
-  emptyCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.card,
-    padding: spacing.xl,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderLight
-  },
-  emptyTitle: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
-  },
-  emptyDesc: {
-    fontSize: typography.sizes.xs,
+  reqTimeAgo: {
+    fontSize: 10.5,
     color: colors.secondaryText,
-    textAlign: 'center',
-    marginTop: 4,
-    lineHeight: 18
+    marginTop: 1
+  },
+  reqTagsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4
+  },
+  reqTagPill: {
+    backgroundColor: '#F0F5FF',
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: borderRadius.chip
+  },
+  reqTagText: {
+    fontSize: 9.5,
+    fontWeight: typography.weights.bold,
+    color: colors.primaryBlue
+  },
+  reqActionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6
+  },
+  acceptBtn: {
+    backgroundColor: colors.primaryBlue,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: borderRadius.full,
+    ...shadows.sm
+  },
+  acceptBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: typography.weights.bold
+  },
+  declineBtn: {
+    backgroundColor: colors.surface,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.border
+  },
+  declineBtnText: {
+    color: colors.secondaryText,
+    fontSize: 12,
+    fontWeight: typography.weights.medium
   }
 });

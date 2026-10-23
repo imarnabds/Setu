@@ -5,11 +5,12 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import { Server } from 'socket.io';
-import mongoose from 'mongoose';
 
 import { config } from './config/index.js';
+import { connectDatabase, isDatabaseConnected } from './config/database.js';
 import { socketService } from './services/socketService.js';
-import { seedDatabase } from './seed.js';
+import { ensureAdminAndKycData } from './services/adminSeed.js';
+import { upstoxIpoService } from './services/upstoxIpoService.js';
 
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -19,15 +20,40 @@ import chatRoutes from './routes/chatRoutes.js';
 import commissionRoutes from './routes/commissionRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import ipoRoutes from './routes/ipoRoutes.js';
 
 const app = express();
 const server = http.createServer(app);
 
-// Initialize Socket.IO
+// Helper to validate allowed CORS origins
+const isAllowedOrigin = (origin: string | undefined): boolean => {
+  if (!origin) return true; // Allow non-browser requests (mobile apps, curl, server-to-server)
+  if (config.corsOrigins.includes('*')) return true;
+  return config.corsOrigins.some((allowed) => {
+    if (allowed === origin) return true;
+    try {
+      const url = new URL(origin);
+      const allowedUrl = new URL(allowed);
+      return url.origin === allowedUrl.origin;
+    } catch {
+      return false;
+    }
+  });
+};
+
+// Initialize Socket.IO with strict CORS allowlist
 const io = new Server(server, {
   cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) {
+        callback(null, true);
+      } else {
+        console.warn(`[Socket.IO CORS Blocked] Origin: ${origin}`);
+        callback(new Error('Origin not allowed by CORS'));
+      }
+    },
+    methods: ['GET', 'POST'],
+    credentials: true
   }
 });
 socketService.initialize(io);
@@ -36,9 +62,17 @@ socketService.initialize(io);
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(
   cors({
-    origin: true,
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) {
+        callback(null, true);
+      } else {
+        console.warn(`[CORS Blocked] Origin: ${origin}`);
+        callback(new Error(`Origin ${origin} not permitted by CORS policy`));
+      }
+    },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
   })
 );
 app.use(express.json({ limit: '5mb' }));
@@ -61,16 +95,20 @@ app.use('/api', limiter);
 // Health Check
 app.get('/health', (req: Request, res: Response) => {
   res.json({
-    status: 'healthy',
+    status: isDatabaseConnected() ? 'healthy' : 'degraded',
+    database: isDatabaseConnected() ? 'connected' : 'disconnected',
     app: config.appName,
+    environment: config.nodeEnv,
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
 });
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({
-    status: 'healthy',
+    status: isDatabaseConnected() ? 'healthy' : 'degraded',
+    database: isDatabaseConnected() ? 'connected' : 'disconnected',
     app: config.appName,
+    environment: config.nodeEnv,
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
@@ -85,6 +123,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/commission', commissionRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/ipos', ipoRoutes);
 
 // Global Error Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
@@ -95,35 +134,33 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-// Start Server
+// Start Server with strict database prerequisite
 const startServer = async () => {
   try {
-    // Attempt Mongoose connection if configured
-    if (process.env.MONGODB_URI) {
-      try {
-        console.log(`[Database] Attempting connection to MongoDB at: ${process.env.MONGODB_URI}`);
-        await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 2000 });
-        console.log('[Database] MongoDB Atlas/Local successfully connected!');
-      } catch (mongoErr: any) {
-        console.warn(`[Database] MongoDB connection skipped: ${mongoErr.message}. Operating with high-resilience local disk persistence.`);
-      }
-    } else {
-      console.log('[Database] Operating with high-resilience local disk persistence engine.');
-    }
+    console.log(`[Startup] Initializing ${config.appName} Backend in [${config.nodeEnv}] mode...`);
 
-    // Seed database if empty
-    await seedDatabase();
+    // 1. Establish and verify MongoDB connection
+    await connectDatabase();
+    console.log('[Startup] Authoritative MongoDB storage verified.');
 
+    // 2. Ensure specific admin user and verification queue items exist
+    await ensureAdminAndKycData();
+
+    // 3. Start background Upstox IPO status synchronization scheduler
+    upstoxIpoService.startScheduledSync();
+
+    // 4. Start HTTP & WebSocket server
     server.listen(config.port, () => {
       console.log(`====================================================`);
-      console.log(`🚀 Setu Backend running on port ${config.port}`);
+      console.log(`🚀 ${config.appName} Backend running on port ${config.port}`);
       console.log(`📡 Real-Time Socket.IO initialized`);
-      console.log(`🔒 Security, CORS & Helmet activated`);
+      console.log(`🔒 Security, Strict CORS Allowlist & Helmet activated`);
+      console.log(`🍃 Database: MongoDB Atlas / Verified Primary Store`);
       console.log(`💼 Commission Engine: 0% to 50% in 2.5% steps active`);
       console.log(`====================================================`);
     });
-  } catch (error) {
-    console.error('Failed to start server:', error);
+  } catch (error: any) {
+    console.error('[Startup Fatal Error] Database connection failed. Aborting startup:', error.message);
     process.exit(1);
   }
 };

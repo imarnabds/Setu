@@ -5,17 +5,18 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image
+  Image,
+  TextInput,
+  ActivityIndicator
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { borderRadius, spacing, shadows } from '../../theme/spacing';
-import { TextInputField, PasswordInputField } from '../../components/common/TextInputField';
-import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { Icon } from '../../components/common/Icon';
 import { api } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
+import { SocialAuthModal } from '../../components/auth/SocialAuthModal';
 
 interface SignupScreenProps {
   onNavigateToLogin: () => void;
@@ -26,14 +27,21 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({
   onNavigateToLogin,
   onBack
 }) => {
+  // Step 1: Form details (Screen 2), Step 2: Role selection (Screen 3)
+  const [step, setStep] = useState<1 | 2>(1);
+
+  // Form State
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [primaryRole, setPrimaryRole] = useState<'investor' | 'demat_holder'>('investor');
-  const [termsAccepted, setTermsAccepted] = useState(true);
-  const [privacyAccepted, setPrivacyAccepted] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Role State
+  const [selectedRole, setSelectedRole] = useState<'investor' | 'demat_holder' | null>(null);
+
+  // Social Auth Modal State
+  const [socialProvider, setSocialProvider] = useState<'google' | 'apple' | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -41,8 +49,7 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({
   const { setAuth } = useAuthStore();
   const { addToast } = useUIStore();
 
-  const handleSignup = async () => {
-    // Basic frontend checks
+  const handleValidateStep1 = () => {
     if (!fullName.trim()) {
       setErrorMessage('Please enter your full name.');
       return;
@@ -56,18 +63,16 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({
       return;
     }
     if (password.length < 6) {
-      setErrorMessage('Password must be at least 6 characters long.');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setErrorMessage('Passwords do not match.');
-      return;
-    }
-    if (!termsAccepted || !privacyAccepted) {
-      setErrorMessage('Please accept the Terms of Service and Privacy Policy.');
+      setErrorMessage('Password must be at least 6 characters.');
       return;
     }
 
+    setErrorMessage(null);
+    setStep(2);
+  };
+
+  const handleFinalSignup = async (role: 'investor' | 'demat_holder') => {
+    setSelectedRole(role);
     setLoading(true);
     setErrorMessage(null);
 
@@ -77,7 +82,7 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({
         email: email.trim().toLowerCase(),
         mobileNumber: mobileNumber.trim(),
         password,
-        primaryRole,
+        primaryRole: role,
         termsAccepted: true,
         privacyAccepted: true
       });
@@ -88,33 +93,40 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({
         addToast(`Welcome to Setu, ${user.fullName}!`, 'success');
       }
     } catch (err: any) {
-      const msg = err.response?.data?.error || 'Registration failed. Please check your inputs.';
+      const msg = err.response?.data?.error || 'Account creation failed. Please check your credentials.';
       setErrorMessage(msg);
+      // If error is related to existing email/phone, jump back to step 1
+      setStep(1);
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-        <Icon name="chevron-left" size={24} color={colors.primaryNavy} />
-        <Text style={styles.backText}>Back</Text>
-      </TouchableOpacity>
+  // -------------------------------------------------------------
+  // SCREEN 3: CHOOSE YOUR ROLE
+  // -------------------------------------------------------------
+  if (step === 2) {
+    return (
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.roleContentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Top Back Nav */}
+        <TouchableOpacity
+          onPress={() => setStep(1)}
+          style={styles.backButton}
+          activeOpacity={0.7}
+        >
+          <Icon name="chevron-left" size={24} color={colors.deepNavy} />
+        </TouchableOpacity>
 
-      <View style={styles.header}>
-        <Image
-          source={require('../../../assets/setu-logo.png')}
-          style={styles.logoImage}
-          resizeMode="cover"
-        />
-        <Text style={styles.title}>Create Your Account</Text>
-        <Text style={styles.subtitle}>
-          Join Setu — India's premier investor networking & IPO assistance platform.
-        </Text>
-      </View>
+        {/* Screen 3 Title & Subtitle */}
+        <View style={styles.roleHeaderSection}>
+          <Text style={styles.screenTitle}>Choose your role</Text>
+          <Text style={styles.screenSubtitle}>Select how you want to use Setu</Text>
+        </View>
 
-      <View style={styles.formCard}>
         {errorMessage && (
           <View style={styles.errorBox}>
             <Icon name="alert-circle" size={16} color={colors.error} />
@@ -122,130 +134,271 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({
           </View>
         )}
 
-        {/* Primary Role Selector */}
-        <Text style={styles.roleLabel}>Select Primary Role</Text>
-        <View style={styles.roleSelector}>
+        {/* Role Cards */}
+        <View style={styles.roleCardsContainer}>
+          {/* Card 1: Individual Investor */}
           <TouchableOpacity
             style={[
-              styles.roleCard,
-              primaryRole === 'investor' && styles.roleCardActive
+              styles.roleSelectCard,
+              styles.investorCardBg,
+              selectedRole === 'investor' && styles.roleCardActive
             ]}
-            onPress={() => setPrimaryRole('investor')}
+            activeOpacity={0.85}
+            disabled={loading}
+            onPress={() => handleFinalSignup('investor')}
           >
-            <View style={styles.roleIcon}>
-              <Icon
-                name="user"
-                size={20}
-                color={primaryRole === 'investor' ? colors.primaryActionBlue : colors.secondaryText}
+            <View style={styles.roleAvatarWrapper}>
+              <Image
+                source={require('../../../assets/investor-avatar.jpg')}
+                style={styles.roleAvatarImg}
+                resizeMode="cover"
               />
+              <View style={styles.roleAvatarBadge}>
+                <Icon name="bar-chart" size={12} color={colors.primaryBlue} />
+              </View>
             </View>
-            <Text style={[styles.roleTitle, primaryRole === 'investor' && styles.roleTitleActive]}>
-              Investor
-            </Text>
-            <Text style={styles.roleDesc}>Browse Demat holders & send Pokes</Text>
+
+            <View style={styles.roleTextCol}>
+              <Text style={styles.roleCardTitle}>Individual Investor</Text>
+              <Text style={styles.roleCardDesc}>
+                Discover verified Demat account holders and get IPO guidance.
+              </Text>
+            </View>
+
+            <View style={styles.roleArrowCircle}>
+              {loading && selectedRole === 'investor' ? (
+                <ActivityIndicator size="small" color={colors.primaryBlue} />
+              ) : (
+                <Icon name="chevron-right" size={20} color={colors.primaryBlue} strokeWidth={2.5} />
+              )}
+            </View>
           </TouchableOpacity>
 
+          {/* Card 2: Demat Account Holder */}
           <TouchableOpacity
             style={[
-              styles.roleCard,
-              primaryRole === 'demat_holder' && styles.roleCardActive
+              styles.roleSelectCard,
+              styles.holderCardBg,
+              selectedRole === 'demat_holder' && styles.roleCardActive
             ]}
-            onPress={() => setPrimaryRole('demat_holder')}
+            activeOpacity={0.85}
+            disabled={loading}
+            onPress={() => handleFinalSignup('demat_holder')}
           >
-            <View style={styles.roleIcon}>
-              <Icon
-                name="shield"
-                size={20}
-                color={primaryRole === 'demat_holder' ? colors.primaryActionBlue : colors.secondaryText}
+            <View style={styles.roleAvatarWrapper}>
+              <Image
+                source={require('../../../assets/holder-avatar.jpg')}
+                style={styles.roleAvatarImg}
+                resizeMode="cover"
               />
+              <View style={styles.roleAvatarBadge}>
+                <Icon name="user" size={12} color={colors.primaryBlue} />
+              </View>
             </View>
-            <Text style={[styles.roleTitle, primaryRole === 'demat_holder' && styles.roleTitleActive]}>
-              Demat Holder
-            </Text>
-            <Text style={styles.roleDesc}>Receive Pokes & configure commission</Text>
+
+            <View style={styles.roleTextCol}>
+              <Text style={styles.roleCardTitle}>Demat Account Holder</Text>
+              <Text style={styles.roleCardDesc}>
+                Receive requests from investors and provide guidance for a commission.
+              </Text>
+            </View>
+
+            <View style={styles.roleArrowCircle}>
+              {loading && selectedRole === 'demat_holder' ? (
+                <ActivityIndicator size="small" color={colors.primaryBlue} />
+              ) : (
+                <Icon name="chevron-right" size={20} color={colors.primaryBlue} strokeWidth={2.5} />
+              )}
+            </View>
           </TouchableOpacity>
         </View>
 
-        {/* Form Fields */}
-        <TextInputField
-          label="Full Legal Name"
-          value={fullName}
-          onChangeText={setFullName}
-          placeholder="e.g. Vikram Malhotra"
-          leftIcon="user"
-        />
+        {/* Bottom Graphic: 3D bar chart pillars rising on soft wave curves */}
+        <View style={styles.roleBottomGraphicContainer}>
+          <Image
+            source={require('../../../assets/role-waves.jpg')}
+            style={styles.roleBottomGraphic}
+            resizeMode="contain"
+          />
+        </View>
+      </ScrollView>
+    );
+  }
 
-        <TextInputField
-          label="Email Address"
-          value={email}
-          onChangeText={setEmail}
-          placeholder="e.g. vikram@example.com"
-          leftIcon="user"
-          keyboardType="email-address"
-        />
+  // -------------------------------------------------------------
+  // SCREEN 2: CREATE YOUR ACCOUNT
+  // -------------------------------------------------------------
+  return (
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+    >
+      {/* Top Back Nav */}
+      <TouchableOpacity onPress={onBack} style={styles.backButton} activeOpacity={0.7}>
+        <Icon name="chevron-left" size={24} color={colors.deepNavy} />
+      </TouchableOpacity>
 
-        <TextInputField
-          label="Mobile Number (with Country Code)"
-          value={mobileNumber}
-          onChangeText={setMobileNumber}
-          placeholder="+91 98200 12345"
-          leftIcon="lock"
-          keyboardType="phone-pad"
-        />
-
-        <PasswordInputField
-          label="Password (min. 6 characters)"
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Create a strong password"
-        />
-
-        <PasswordInputField
-          label="Confirm Password"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          placeholder="Re-enter your password"
-        />
-
-        {/* Checkbox Terms */}
-        <TouchableOpacity
-          style={styles.checkboxRow}
-          onPress={() => setTermsAccepted(!termsAccepted)}
-        >
-          <View style={[styles.checkbox, termsAccepted && styles.checkboxActive]}>
-            {termsAccepted && <Icon name="check" size={12} color={colors.surface} strokeWidth={3} />}
-          </View>
-          <Text style={styles.checkboxText}>
-            I accept the <Text style={styles.link}>Terms of Service</Text>
+      {/* Screen 2 Header with Floating Card Illustration */}
+      <View style={styles.headerRow}>
+        <View style={styles.headerTextCol}>
+          <Text style={styles.screenTitle}>Create your account</Text>
+          <Text style={styles.screenSubtitle}>
+            Join Setu and start building meaningful connections.
           </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.checkboxRow}
-          onPress={() => setPrivacyAccepted(!privacyAccepted)}
-        >
-          <View style={[styles.checkbox, privacyAccepted && styles.checkboxActive]}>
-            {privacyAccepted && <Icon name="check" size={12} color={colors.surface} strokeWidth={3} />}
-          </View>
-          <Text style={styles.checkboxText}>
-            I agree to the <Text style={styles.link}>Privacy Policy & Legal Disclosures</Text>
-          </Text>
-        </TouchableOpacity>
-
-        <PrimaryButton
-          label="Create Account"
-          onPress={handleSignup}
-          loading={loading}
-          style={styles.submitBtn}
+        </View>
+        <Image
+          source={require('../../../assets/signup-badge.jpg')}
+          style={styles.floatingBadgeImg}
+          resizeMode="cover"
         />
       </View>
 
-      <View style={styles.switchRow}>
-        <Text style={styles.switchText}>Already have an account? </Text>
-        <TouchableOpacity onPress={onNavigateToLogin}>
-          <Text style={styles.switchLink}>Sign In</Text>
+      {errorMessage && (
+        <View style={styles.errorBox}>
+          <Icon name="alert-circle" size={16} color={colors.error} />
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        </View>
+      )}
+
+      {/* Form Fields */}
+      <View style={styles.formSection}>
+        {/* Full Name */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Full name</Text>
+          <View style={styles.inputContainer}>
+            <View style={styles.inputIconBox}>
+              <Icon name="user" size={18} color={colors.mutedText} />
+            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your full name"
+              placeholderTextColor={colors.mutedText}
+              value={fullName}
+              onChangeText={setFullName}
+              autoCapitalize="words"
+            />
+          </View>
+        </View>
+
+        {/* Email Address */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Email address</Text>
+          <View style={styles.inputContainer}>
+            <View style={styles.inputIconBox}>
+              <Icon name="mail" size={18} color={colors.mutedText} />
+            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your email"
+              placeholderTextColor={colors.mutedText}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
+        </View>
+
+        {/* Mobile Number */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Mobile number</Text>
+          <View style={styles.inputContainer}>
+            <View style={styles.inputIconBox}>
+              <Icon name="phone" size={18} color={colors.mutedText} />
+            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your mobile number"
+              placeholderTextColor={colors.mutedText}
+              value={mobileNumber}
+              onChangeText={setMobileNumber}
+              keyboardType="phone-pad"
+            />
+          </View>
+        </View>
+
+        {/* Password */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Password</Text>
+          <View style={styles.inputContainer}>
+            <View style={styles.inputIconBox}>
+              <Icon name="lock" size={18} color={colors.mutedText} />
+            </View>
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              placeholder="Create a strong password"
+              placeholderTextColor={colors.mutedText}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+            />
+            <TouchableOpacity
+              onPress={() => setShowPassword(!showPassword)}
+              style={styles.eyeBtn}
+            >
+              <Icon
+                name={showPassword ? 'eye-off' : 'eye'}
+                size={18}
+                color={colors.mutedText}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Submit Button */}
+        <TouchableOpacity
+          style={styles.createAccountBtn}
+          activeOpacity={0.88}
+          onPress={handleValidateStep1}
+        >
+          <Text style={styles.createAccountText}>Create account</Text>
+          <Icon name="arrow-right" size={18} color="#FFFFFF" strokeWidth={2.5} />
         </TouchableOpacity>
+
+        {/* OR Divider */}
+        <View style={styles.orDividerRow}>
+          <View style={styles.orLine} />
+          <Text style={styles.orText}>OR</Text>
+          <View style={styles.orLine} />
+        </View>
+
+        {/* Social Buttons */}
+        <TouchableOpacity
+          style={styles.socialBtn}
+          activeOpacity={0.8}
+          onPress={() => setSocialProvider('google')}
+        >
+          <Icon name="google" size={18} />
+          <Text style={styles.socialBtnText}>Continue with Google</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.socialBtn}
+          activeOpacity={0.8}
+          onPress={() => setSocialProvider('apple')}
+        >
+          <Icon name="apple" size={18} color="#000000" />
+          <Text style={styles.socialBtnText}>Continue with Apple</Text>
+        </TouchableOpacity>
+
+        {/* Terms Disclaimer */}
+        <Text style={styles.termsDisclaimer}>
+          By creating an account, you agree to our{' '}
+          <Text style={styles.termsLink}>Terms of Service</Text> and{' '}
+          <Text style={styles.termsLink}>Privacy Policy</Text>.
+        </Text>
       </View>
+
+      {/* Social Authentication Modal */}
+      <SocialAuthModal
+        visible={!!socialProvider}
+        provider={socialProvider}
+        onClose={() => setSocialProvider(null)}
+        defaultRole={selectedRole || 'investor'}
+      />
     </ScrollView>
   );
 };
@@ -256,157 +409,252 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background
   },
   contentContainer: {
-    padding: spacing.xl,
-    paddingTop: spacing.lg
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xxl
   },
-  backBtn: {
-    flexDirection: 'row',
+  roleContentContainer: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+    flexGrow: 1,
+    justifyContent: 'space-between'
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.full,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xs
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
     marginBottom: spacing.md
   },
-  backText: {
-    fontSize: typography.sizes.sm,
-    color: colors.primaryNavy,
-    fontWeight: typography.weights.medium
+  headerTextCol: {
+    flex: 1,
+    paddingRight: spacing.sm
   },
-  header: {
-    marginBottom: spacing.xl
-  },
-  logoImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    marginBottom: spacing.sm,
-    ...shadows.sm
-  },
-  title: {
-    fontSize: 26,
+  screenTitle: {
+    fontSize: 24,
     fontWeight: typography.weights.bold,
-    color: colors.primaryNavy,
+    color: colors.deepNavy,
     letterSpacing: -0.3
   },
-  subtitle: {
-    fontSize: typography.sizes.sm,
+  screenSubtitle: {
+    fontSize: typography.sizes.xs,
     color: colors.secondaryText,
-    marginTop: spacing.xs,
-    lineHeight: 20
+    marginTop: 4,
+    lineHeight: 18
   },
-  formCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.cardLg,
-    padding: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+  floatingBadgeImg: {
+    width: 54,
+    height: 60,
+    borderRadius: 14,
     ...shadows.sm
   },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FDEEED',
-    padding: spacing.md,
+    backgroundColor: colors.errorLight,
+    padding: spacing.sm,
     borderRadius: borderRadius.md,
     marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: '#FBD4D3'
+    gap: spacing.xs
   },
   errorText: {
     color: colors.error,
     fontSize: typography.sizes.xs,
-    marginLeft: spacing.sm,
-    flex: 1,
-    fontWeight: typography.weights.medium
+    fontWeight: typography.weights.medium,
+    flex: 1
   },
-  roleLabel: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
-    color: colors.primaryNavy,
-    marginBottom: spacing.xs + 2
+  formSection: {
+    width: '100%'
   },
-  roleSelector: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.lg
-  },
-  roleCard: {
-    flex: 1,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 18,
-    padding: spacing.md,
-    backgroundColor: colors.surface
-  },
-  roleCardActive: {
-    borderColor: colors.primaryActionBlue,
-    backgroundColor: colors.subtleBlueBackground
-  },
-  roleIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.surfaceSubtle,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs + 2
-  },
-  roleTitle: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
-    color: colors.primaryNavy
-  },
-  roleTitleActive: {
-    color: colors.primaryActionBlue
-  },
-  roleDesc: {
-    fontSize: 10,
-    color: colors.secondaryText,
-    marginTop: 2,
-    lineHeight: 14
-  },
-  checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  inputGroup: {
     marginBottom: spacing.md
   },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 6,
-    borderWidth: 1.5,
+  inputLabel: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.deepNavy,
+    marginBottom: 6
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.input,
+    borderWidth: 1,
     borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    height: 48,
+    ...shadows.sm
+  },
+  inputIconBox: {
+    marginRight: spacing.sm
+  },
+  input: {
+    flex: 1,
+    fontSize: typography.sizes.sm,
+    color: colors.deepNavy,
+    height: '100%'
+  },
+  eyeBtn: {
+    padding: 6
+  },
+  createAccountBtn: {
+    width: '100%',
+    height: 50,
+    backgroundColor: colors.primaryBlue,
+    borderRadius: borderRadius.full,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.sm,
-    backgroundColor: colors.surface
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+    marginBottom: spacing.md,
+    ...shadows.md
   },
-  checkboxActive: {
-    backgroundColor: colors.primaryActionBlue,
-    borderColor: colors.primaryActionBlue
+  createAccountText: {
+    color: '#FFFFFF',
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold
   },
-  checkboxText: {
-    fontSize: typography.sizes.xs,
-    color: colors.secondaryText
-  },
-  link: {
-    color: colors.primaryActionBlue,
-    fontWeight: typography.weights.semibold
-  },
-  submitBtn: {
-    height: 50,
-    marginTop: spacing.sm
-  },
-  switchRow: {
+  orDividerRow: {
     flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: spacing.sm
+  },
+  orLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border
+  },
+  orText: {
+    paddingHorizontal: spacing.md,
+    fontSize: 11,
+    fontWeight: typography.weights.semibold,
+    color: colors.mutedText
+  },
+  socialBtn: {
+    width: '100%',
+    height: 48,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.full,
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.xl,
-    marginBottom: spacing.xxl
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.sm,
+    ...shadows.sm
   },
-  switchText: {
+  socialBtnText: {
     fontSize: typography.sizes.sm,
-    color: colors.secondaryText
+    fontWeight: typography.weights.semibold,
+    color: colors.deepNavy
   },
-  switchLink: {
-    fontSize: typography.sizes.sm,
+  termsDisclaimer: {
+    fontSize: 11,
+    color: colors.secondaryText,
+    textAlign: 'center',
+    marginTop: spacing.md,
+    lineHeight: 16
+  },
+  termsLink: {
+    color: colors.primaryBlue,
+    fontWeight: typography.weights.medium
+  },
+
+  // Role Selection Styles
+  roleHeaderSection: {
+    marginBottom: spacing.xl
+  },
+  roleCardsContainer: {
+    width: '100%',
+    gap: spacing.md
+  },
+  roleSelectCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    ...shadows.sm
+  },
+  investorCardBg: {
+    backgroundColor: '#F0F5FF',
+    borderColor: '#D4E2FE'
+  },
+  holderCardBg: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border
+  },
+  roleCardActive: {
+    borderColor: colors.primaryBlue
+  },
+  roleAvatarWrapper: {
+    width: 60,
+    height: 60,
+    borderRadius: 18,
+    backgroundColor: '#EBF2FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative'
+  },
+  roleAvatarImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 18
+  },
+  roleAvatarBadge: {
+    position: 'absolute',
+    bottom: -4,
+    right: -4,
+    width: 22,
+    height: 22,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadows.sm
+  },
+  roleTextCol: {
+    flex: 1,
+    paddingHorizontal: spacing.md
+  },
+  roleCardTitle: {
+    fontSize: 16,
     fontWeight: typography.weights.bold,
-    color: colors.primaryActionBlue
+    color: colors.deepNavy,
+    marginBottom: 4
+  },
+  roleCardDesc: {
+    fontSize: 11.5,
+    color: colors.secondaryText,
+    lineHeight: 16
+  },
+  roleArrowCircle: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  roleBottomGraphicContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: spacing.xl
+  },
+  roleBottomGraphic: {
+    width: '100%',
+    height: 120
   }
 });

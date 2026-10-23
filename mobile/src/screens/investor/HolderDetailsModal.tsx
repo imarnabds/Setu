@@ -14,6 +14,7 @@ import { ProfileAvatar } from '../../components/common/ProfileAvatar';
 import { StatusBadge } from '../../components/common/StatusBadge';
 import { PokeButton, PokeButtonState } from '../../components/poke/PokeButton';
 import { Icon } from '../../components/common/Icon';
+import { useIpoStore } from '../../store/ipoStore';
 
 interface HolderDetailsModalProps {
   user: any | null;
@@ -34,6 +35,7 @@ export const HolderDetailsModal: React.FC<HolderDetailsModalProps> = ({
   onCancelPoke,
   onOpenChat
 }) => {
+  const { selectedIpo } = useIpoStore();
   if (!user) return null;
 
   return (
@@ -62,6 +64,19 @@ export const HolderDetailsModal: React.FC<HolderDetailsModalProps> = ({
             <Text style={styles.experience}>{user.investmentExperience || 'Experienced Holder'}</Text>
           </View>
         </View>
+
+        {/* Active IPO Context Badge */}
+        {selectedIpo && (
+          <View style={styles.ipoContextCard}>
+            <View style={styles.ipoContextTop}>
+              <Icon name="trending-up" size={13} color={colors.primaryBlue} />
+              <Text style={styles.ipoContextTitle}>Assistance for: {selectedIpo.name}</Text>
+            </View>
+            <Text style={styles.ipoContextDesc}>
+              This Poke will establish an assistance connection dedicated to {selectedIpo.name} (Status: {selectedIpo.status}).
+            </Text>
+          </View>
+        )}
 
         {/* Verification Status Card */}
         <View style={styles.verificationCard}>
@@ -176,6 +191,30 @@ const styles = StyleSheet.create({
   headerText: {
     marginLeft: spacing.lg,
     flex: 1
+  },
+  ipoContextCard: {
+    backgroundColor: colors.surfaceHighlight,
+    borderRadius: borderRadius.md,
+    padding: spacing.sm,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: '#D4E4FC'
+  },
+  ipoContextTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 2
+  },
+  ipoContextTitle: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.primaryBlue
+  },
+  ipoContextDesc: {
+    fontSize: 11,
+    color: colors.secondaryText,
+    lineHeight: 15
   },
   nameRow: {
     flexDirection: 'row',

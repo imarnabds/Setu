@@ -5,7 +5,8 @@ import {
   reviewKyc,
   getAllPokes,
   getAllConnections,
-  getAuditLogs
+  getAuditLogs,
+  getConnectionMessagesForAdmin
 } from '../controllers/adminController.js';
 import { authenticate, requireRole } from '../middleware/auth.js';
 
@@ -17,9 +18,13 @@ router.use(requireRole('admin'));
 
 router.get('/stats', getAdminStats);
 router.get('/users', getAdminUsers);
-router.put('/kyc/:userId', reviewKyc);
 router.get('/pokes', getAllPokes);
+router.put('/kyc/:userId', reviewKyc);
+router.post('/kyc/:userId', reviewKyc);
+router.put('/kyc/:userId/review', reviewKyc);
+router.post('/kyc/:userId/review', reviewKyc);
 router.get('/connections', getAllConnections);
+router.get('/connections/:connectionId/messages', getConnectionMessagesForAdmin);
 router.get('/audit-logs', getAuditLogs);
 
 export default router;

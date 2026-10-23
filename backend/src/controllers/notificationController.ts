@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { storage } from '../services/storage.js';
+import { dbService } from '../services/dbService.js';
 import { AuthenticatedRequest } from '../middleware/auth.js';
 
 export const getNotifications = async (
@@ -12,7 +12,7 @@ export const getNotifications = async (
       return;
     }
 
-    const notifications = storage.getNotificationsForUser(req.user.id);
+    const notifications = await dbService.getNotificationsForUser(req.user.id);
     const unreadCount = notifications.filter((n) => !n.isRead).length;
 
     res.json({
@@ -37,8 +37,8 @@ export const markAsRead = async (
       return;
     }
 
-    const { id } = req.params;
-    const success = storage.markNotificationAsRead(id, req.user.id);
+    const id = req.params.id as string;
+    const success = await dbService.markNotificationAsRead(id, req.user.id);
 
     res.json({
       success,
@@ -59,7 +59,7 @@ export const markAllAsRead = async (
       return;
     }
 
-    storage.markAllNotificationsAsRead(req.user.id);
+    await dbService.markAllNotificationsAsRead(req.user.id);
 
     res.json({
       success: true,
