@@ -6,7 +6,8 @@ import {
   StyleSheet,
   Modal,
   ScrollView,
-  ActivityIndicator
+  ActivityIndicator,
+  TextInput
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
@@ -37,6 +38,17 @@ export const IpoDropdownBar: React.FC = () => {
     setSelectedIpo
   } = useIpoStore();
   const [modalVisible, setModalVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredIpos = ipos.filter((item) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    const nameMatch = (item.name || '').toLowerCase().includes(q);
+    const symbolMatch = (((item as any).symbol || '') as string).toLowerCase().includes(q);
+    const categoryMatch = (((item as any).category || '') as string).toLowerCase().includes(q);
+    const statusMatch = (item.status || '').toLowerCase().includes(q);
+    return nameMatch || symbolMatch || categoryMatch || statusMatch;
+  });
 
   useEffect(() => {
     fetchIpos();
@@ -165,24 +177,38 @@ export const IpoDropdownBar: React.FC = () => {
         visible={modalVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() => {
+          setModalVisible(false);
+          setSearchQuery('');
+        }}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setModalVisible(false)}
-        >
-          <View style={styles.modalCard} onStartShouldSetResponder={() => true}>
+        <View style={styles.modalOverlay}>
+          {/* Backdrop Touch Area */}
+          <TouchableOpacity
+            style={StyleSheet.absoluteFill}
+            activeOpacity={1}
+            onPress={() => {
+              setModalVisible(false);
+              setSearchQuery('');
+            }}
+          />
+
+          {/* Modal Card content sits in front */}
+          <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
-              <View>
+              <View style={{ flex: 1, paddingRight: 8 }}>
                 <Text style={styles.modalTitle}>Select IPO Offering</Text>
                 <Text style={styles.modalSubtitle}>
                   Connections & chat are isolated strictly to the selected IPO
                 </Text>
               </View>
               <TouchableOpacity
-                onPress={() => setModalVisible(false)}
+                onPress={() => {
+                  setModalVisible(false);
+                  setSearchQuery('');
+                }}
                 style={styles.modalCloseBtn}
+                activeOpacity={0.7}
               >
                 <Icon name="close" size={18} color={colors.deepNavy} />
               </TouchableOpacity>
@@ -228,113 +254,176 @@ export const IpoDropdownBar: React.FC = () => {
               </TouchableOpacity>
             </View>
 
+            {/* Search Input Bar */}
+            <View style={styles.searchBarContainer}>
+              <Icon name="search" size={15} color="#94A3B8" />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search IPO by name, symbol, or category..."
+                placeholderTextColor="#94A3B8"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoCapitalize="none"
+                autoCorrect={false}
+                clearButtonMode="while-editing"
+                underlineColorAndroid="transparent"
+              />
+              {searchQuery.trim().length > 0 && (
+                <TouchableOpacity
+                  style={styles.searchClearBtn}
+                  onPress={() => setSearchQuery('')}
+                  activeOpacity={0.7}
+                >
+                  <Icon name="close" size={13} color="#64748B" />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Search Results Summary */}
+            <View style={styles.searchResultsRow}>
+              <Text style={styles.searchResultsCount}>
+                {searchQuery.trim()
+                  ? `Found ${filteredIpos.length} offering${filteredIpos.length === 1 ? '' : 's'}`
+                  : `${ipos.length} offerings available`}
+              </Text>
+              {searchQuery.trim().length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery('')} activeOpacity={0.7}>
+                  <Text style={styles.clearSearchLink}>Clear</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
             <ScrollView style={styles.modalList} showsVerticalScrollIndicator={false}>
-              {/* Option to clear selection */}
-              <TouchableOpacity
-                style={[styles.ipoOption, !selectedIpo && styles.ipoOptionSelected]}
-                activeOpacity={0.7}
-                onPress={() => {
-                  setSelectedIpo(null);
-                  setModalVisible(false);
-                }}
-              >
-                <View style={styles.ipoOptionLeft}>
-                  <View style={styles.noneCircle}>
-                    <Icon name="filter" size={14} color={colors.secondaryText} />
+              {/* Option to clear selection when not actively filtering */}
+              {!searchQuery.trim() && (
+                <TouchableOpacity
+                  style={[styles.ipoOption, !selectedIpo && styles.ipoOptionSelected]}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setSelectedIpo(null);
+                    setModalVisible(false);
+                    setSearchQuery('');
+                  }}
+                >
+                  <View style={styles.ipoOptionLeft}>
+                    <View style={styles.noneCircle}>
+                      <Icon name="filter" size={14} color={colors.secondaryText} />
+                    </View>
+                    <View style={styles.ipoOptionInfo}>
+                      <Text style={styles.noneTitle}>No IPO Selected (Prompt State)</Text>
+                      <Text style={styles.noneSubtitle}>
+                        Require explicit selection before fetching connections
+                      </Text>
+                    </View>
                   </View>
-                  <View style={styles.ipoOptionInfo}>
-                    <Text style={styles.noneTitle}>No IPO Selected (Prompt State)</Text>
-                    <Text style={styles.noneSubtitle}>
-                      Require explicit selection before fetching connections
-                    </Text>
-                  </View>
-                </View>
-                {!selectedIpo && (
-                  <View style={styles.checkCircle}>
-                    <Icon name="check" size={14} color={colors.surface} strokeWidth={3} />
-                  </View>
-                )}
-              </TouchableOpacity>
+                  {!selectedIpo && (
+                    <View style={styles.checkCircle}>
+                      <Icon name="check" size={14} color={colors.surface} strokeWidth={3} />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              )}
 
-              {/* List of IPO Offerings directly from MongoDB */}
-              {ipos.map((ipo) => {
-                const isSelected = selectedIpo?.id === ipo.id;
-                const statusStyle = getStatusBadgeStyle(ipo.status);
-
-                return (
+              {/* Empty state when searching and no results */}
+              {filteredIpos.length === 0 && searchQuery.trim().length > 0 ? (
+                <View style={styles.emptySearchBox}>
+                  <View style={styles.emptySearchIconCircle}>
+                    <Icon name="search" size={22} color="#94A3B8" />
+                  </View>
+                  <Text style={styles.emptySearchTitle}>No IPOs Found</Text>
+                  <Text style={styles.emptySearchSubtitle}>
+                    No offerings match "{searchQuery}". Try searching with another name or symbol.
+                  </Text>
                   <TouchableOpacity
-                    key={ipo.id}
-                    style={[styles.ipoOption, isSelected && styles.ipoOptionSelected]}
-                    activeOpacity={0.7}
-                    onPress={() => {
-                      setSelectedIpo(ipo);
-                      setModalVisible(false);
-                    }}
+                    style={styles.emptyResetBtn}
+                    onPress={() => setSearchQuery('')}
+                    activeOpacity={0.8}
                   >
-                    <View style={styles.ipoOptionLeft}>
-                      <View
-                        style={[
-                          styles.ipoSymbolCircle,
-                          isSelected && styles.ipoSymbolCircleSelected
-                        ]}
-                      >
-                        <Text
+                    <Text style={styles.emptyResetBtnText}>View All Offerings</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                /* List of filtered IPO Offerings */
+                filteredIpos.map((ipo) => {
+                  const isSelected = selectedIpo?.id === ipo.id;
+                  const statusStyle = getStatusBadgeStyle(ipo.status);
+
+                  return (
+                    <TouchableOpacity
+                      key={ipo.id}
+                      style={[styles.ipoOption, isSelected && styles.ipoOptionSelected]}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setSelectedIpo(ipo);
+                        setModalVisible(false);
+                        setSearchQuery('');
+                      }}
+                    >
+                      <View style={styles.ipoOptionLeft}>
+                        <View
                           style={[
-                            styles.ipoSymbolText,
-                            isSelected && styles.ipoSymbolTextSelected
+                            styles.ipoSymbolCircle,
+                            isSelected && styles.ipoSymbolCircleSelected
                           ]}
                         >
-                          {ipo.name.charAt(0).toUpperCase()}
-                        </Text>
-                      </View>
-
-                      <View style={styles.ipoOptionInfo}>
-                        <View style={styles.ipoNameRow}>
-                          <Text style={styles.ipoName}>{ipo.name}</Text>
-                          <View
+                          <Text
                             style={[
-                              styles.statusPill,
-                              { backgroundColor: statusStyle.bg, marginLeft: 6 }
+                              styles.ipoSymbolText,
+                              isSelected && styles.ipoSymbolTextSelected
                             ]}
                           >
-                            <Text
+                            {ipo.name.charAt(0).toUpperCase()}
+                          </Text>
+                        </View>
+
+                        <View style={styles.ipoOptionInfo}>
+                          <View style={styles.ipoNameRow}>
+                            <Text style={styles.ipoName}>{ipo.name}</Text>
+                            <View
                               style={[
-                                styles.statusPillText,
-                                { color: statusStyle.text }
+                                styles.statusPill,
+                                { backgroundColor: statusStyle.bg, marginLeft: 6 }
                               ]}
                             >
-                              {statusStyle.label}
-                            </Text>
+                              <Text
+                                style={[
+                                  styles.statusPillText,
+                                  { color: statusStyle.text }
+                                ]}
+                              >
+                                {statusStyle.label}
+                              </Text>
+                            </View>
+                            {ipo.isStale ? (
+                              <View style={[styles.staleBadge, { marginLeft: 4 }]}>
+                                <Text style={styles.staleBadgeText}>STALE</Text>
+                              </View>
+                            ) : ipo.isVerified ? (
+                              <View style={[styles.liveBadge, { marginLeft: 4 }]}>
+                                <Text style={styles.liveBadgeText}>LIVE</Text>
+                              </View>
+                            ) : null}
+                            {ipo.source === 'demo_preserved' && (
+                              <View style={[styles.demoBadge, { marginLeft: 4 }]}>
+                                <Text style={styles.demoBadgeText}>PRESERVED</Text>
+                              </View>
+                            )}
                           </View>
-                          {ipo.isStale ? (
-                            <View style={[styles.staleBadge, { marginLeft: 4 }]}>
-                              <Text style={styles.staleBadgeText}>STALE</Text>
-                            </View>
-                          ) : ipo.isVerified ? (
-                            <View style={[styles.liveBadge, { marginLeft: 4 }]}>
-                              <Text style={styles.liveBadgeText}>LIVE</Text>
-                            </View>
-                          ) : null}
-                          {ipo.source === 'demo_preserved' && (
-                            <View style={[styles.demoBadge, { marginLeft: 4 }]}>
-                              <Text style={styles.demoBadgeText}>PRESERVED</Text>
-                            </View>
-                          )}
+                          <Text style={styles.ipoTimestamp}>
+                            Last updated: {formatSyncTime(ipo.lastUpdated)}
+                          </Text>
                         </View>
-                        <Text style={styles.ipoTimestamp}>
-                          Last updated: {formatSyncTime(ipo.lastUpdated)}
-                        </Text>
                       </View>
-                    </View>
 
-                    {isSelected && (
-                      <View style={styles.checkCircle}>
-                        <Icon name="check" size={14} color={colors.surface} strokeWidth={3} />
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
+                      {isSelected && (
+                        <View style={styles.checkCircle}>
+                          <Icon name="check" size={14} color={colors.surface} strokeWidth={3} />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })
+              )}
 
               {ipos.length === 0 && !isLoading && (
                 <View style={styles.emptyStateWrap}>
@@ -346,7 +435,7 @@ export const IpoDropdownBar: React.FC = () => {
               )}
             </ScrollView>
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
     </View>
   );
@@ -354,17 +443,23 @@ export const IpoDropdownBar: React.FC = () => {
 
 const styles = StyleSheet.create({
   outerContainer: {
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    backgroundColor: '#F5F8FC',
+    borderBottomWidth: 0,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: 6,
     zIndex: 10
   },
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: 8,
-    gap: 8
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E9F0FA',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+    ...shadows.sm
   },
   labelSection: {
     flexDirection: 'row',
@@ -465,18 +560,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   subStrip: {
-    backgroundColor: '#F8FAFD',
-    paddingHorizontal: spacing.md,
-    paddingVertical: 4,
+    backgroundColor: 'transparent',
+    paddingHorizontal: 4,
+    paddingTop: 4,
+    paddingBottom: 2,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: colors.borderLight
+    borderTopWidth: 0
   },
   subStripStale: {
-    backgroundColor: '#FFFBEB',
-    borderTopColor: '#FEF3C7'
+    backgroundColor: 'transparent'
   },
   subStripLeft: {
     flexDirection: 'row',
@@ -708,5 +802,92 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.xs,
     color: colors.secondaryText,
     textAlign: 'center'
+  },
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFD',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 12,
+    height: 42,
+    marginTop: 10,
+    marginBottom: 8
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    fontSize: 13,
+    color: '#142B4D',
+    marginLeft: 8,
+    marginRight: 4,
+    borderWidth: 0,
+    outlineWidth: 0,
+    outlineStyle: 'none' as any
+  },
+  searchClearBtn: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  searchResultsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+    paddingHorizontal: 2
+  },
+  searchResultsCount: {
+    fontSize: 11.5,
+    color: '#64748B',
+    fontWeight: '500'
+  },
+  clearSearchLink: {
+    fontSize: 11.5,
+    color: '#246BFD',
+    fontWeight: '600'
+  },
+  emptySearchBox: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 32,
+    paddingHorizontal: 16
+  },
+  emptySearchIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10
+  },
+  emptySearchTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#142B4D',
+    marginBottom: 4
+  },
+  emptySearchSubtitle: {
+    fontSize: 12,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 17,
+    marginBottom: 12
+  },
+  emptyResetBtn: {
+    backgroundColor: '#EEF4FE',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 10
+  },
+  emptyResetBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#246BFD'
   }
 });

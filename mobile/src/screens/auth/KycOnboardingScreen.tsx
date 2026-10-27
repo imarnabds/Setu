@@ -479,6 +479,14 @@ export const KycOnboardingScreen: React.FC<KycOnboardingScreenProps> = ({
         ))}
       </View>
 
+      {/* Mandatory KYC Notice */}
+      <View style={styles.mandatoryNoticeCard}>
+        <Icon name="shield" size={15} color="#B45309" />
+        <Text style={styles.mandatoryNoticeText}>
+          <Text style={{ fontWeight: '700' }}>Mandatory Step:</Text> You must complete KYC verification before you are allowed to log in as an active Investor or Demat Holder. Once submitted and verified by compliance, your full account access is granted.
+        </Text>
+      </View>
+
       {errorMessage && (
         <View style={styles.errorBox}>
           <Icon name="alert-circle" size={16} color={colors.error} />
@@ -1949,5 +1957,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.secondaryText,
     fontWeight: typography.weights.medium
+  },
+  mandatoryNoticeCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    gap: 8,
+    marginVertical: spacing.md
+  },
+  mandatoryNoticeText: {
+    flex: 1,
+    fontSize: 11.5,
+    color: '#92400E',
+    lineHeight: 17
   }
 });

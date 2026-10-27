@@ -34,7 +34,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           { key: 'home', label: 'Home', icon: 'home' },
           { key: 'pokes', label: 'Requests', icon: 'send', badge: unreadPokesCount },
           { key: 'chats', label: 'Connections', icon: 'users', badge: unreadChatsCount },
-          { key: 'commission', label: 'Earnings', icon: 'award' },
+          { key: 'commission', label: 'Earnings', icon: 'bar-chart' },
           { key: 'profile', label: 'Profile', icon: 'profile' }
         ]
       : [
@@ -50,6 +50,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
       <View style={styles.navBar}>
         {tabs.map((tab) => {
           const isActive = activeTab === tab.key;
+          const iconName = isActive && tab.key === 'home' ? 'home-filled' : tab.icon;
           return (
             <TouchableOpacity
               key={tab.key}
@@ -59,10 +60,10 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
             >
               <View style={styles.iconContainer}>
                 <Icon
-                  name={tab.icon}
+                  name={iconName}
                   size={20}
                   color={isActive ? colors.primaryBlue : '#94A3B8'}
-                  strokeWidth={isActive ? 2.3 : 1.8}
+                  strokeWidth={isActive ? 2.4 : 1.8}
                 />
                 {tab.badge !== undefined && tab.badge > 0 && (
                   <View style={styles.badge}>
@@ -95,22 +96,21 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
-    paddingBottom: Platform.OS === 'ios' ? 16 : 8,
-    paddingHorizontal: 12
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#EEF2F6',
+    paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+    ...shadows.sm
   },
   navBar: {
     width: '100%',
-    maxWidth: 420,
-    height: 62,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    maxWidth: 440,
+    height: 58,
+    backgroundColor: 'transparent',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingHorizontal: spacing.xs,
-    ...shadows.floating
+    paddingHorizontal: spacing.xs
   },
   tabButton: {
     flex: 1,

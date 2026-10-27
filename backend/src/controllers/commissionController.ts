@@ -184,15 +184,14 @@ export const calculateCommission = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { baseAmount, rate } = req.body;
+    const rawAmount = req.body.listingProfit !== undefined ? req.body.listingProfit : req.body.baseAmount;
+    const numProfit = parseFloat(rawAmount);
+    const numRate = parseFloat(req.body.rate);
 
-    const numBase = parseFloat(baseAmount);
-    const numRate = parseFloat(rate);
-
-    if (isNaN(numBase) || numBase <= 0) {
+    if (isNaN(numProfit) || numProfit <= 0) {
       res.status(400).json({
         success: false,
-        error: 'Base amount must be a positive number'
+        error: 'Listing profit amount must be a positive number'
       });
       return;
     }
@@ -205,20 +204,20 @@ export const calculateCommission = async (
       return;
     }
 
-    // Decimal safe calculation
-    const commissionFee = Math.round((numBase * (numRate / 100)) * 100) / 100;
-    const effectiveTotal = Math.round((numBase + commissionFee) * 100) / 100;
+    // Decimal safe profit commission calculation
+    const commissionFee = Math.round((numProfit * (numRate / 100)) * 100) / 100;
+    const investorNetProfit = Math.max(0, Math.round((numProfit - commissionFee) * 100) / 100);
 
     res.json({
       success: true,
       data: {
-        baseAmount: numBase,
+        listingProfit: numProfit,
         rate: numRate,
         commissionFee,
-        effectiveTotal,
+        investorNetProfit,
         currency: 'INR',
         disclaimer:
-          'Statutory Notice: Commission is applicable solely to documented advisory or technical assistance service fees. Under SEBI regulations, no profit-sharing, allotment guarantee, or custody fee is permitted.'
+          'Profit Sharing Terms: Commission is agreed between the investor and demat account holder on the listing profit when applying on behalf of the investor.'
       }
     });
   } catch (error) {

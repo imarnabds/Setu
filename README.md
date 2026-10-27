@@ -115,9 +115,10 @@ Upstox lifecycle states are mapped strictly to Setu's 4 user-facing lifecycle st
 
 ### 1. Controlled Introductions (The Poke System)
 - **Direct Messaging Prohibited Prior to Consent**: Unsolicited chat is strictly blocked.
-- **Investor Flow**: Investor browses verified Demat account holders, reviews their published advisory terms, and initiates a **Poke**. A confirmation sheet explains the terms and states that communication will only unlock upon holder acceptance. Pending requests can be cancelled at any time.
-- **Demat Holder Flow**: Receives incoming Pokes in an inbox. Inspects the investor's profile, KYC status, and proposed terms. The holder can **Accept** (which locks the terms, registers an active connection, and opens in-app chat) or **Decline** with an optional note.
+- **Investor Flow**: Investor browses verified Demat account holders, reviews their published commission rates on profit, and initiates a **Poke** requesting the holder to apply for an IPO on their behalf. A confirmation sheet explains the terms and states that communication will only unlock upon holder acceptance. Pending requests can be cancelled at any time.
+- **Demat Holder Flow**: Receives incoming Pokes in an inbox. Inspects the investor's profile, KYC status, and proposed terms. The holder can **Accept** (which locks the commission on listing profit terms, registers an active connection, and opens in-app chat) or **Decline** with an optional note.
 - **Duplicate Prevention**: Backend constraints prevent sending multiple active requests between the same parties.
+- **Guest Interception**: Guests previewing the application without login are prevented from sending or receiving Pokes until completing registration and KYC.
 
 ### 2. IPO-Scoped Connections & Isolated Chat
 Every connection, poke, and chat room is scoped to a specific IPO:
@@ -127,16 +128,18 @@ Every connection, poke, and chat room is scoped to a specific IPO:
 - **System Compliance Pinned Messages**: Every chat room includes pinned reminders and an agreed terms header:
   > *"Compliance Reminder: All IPO applications must use authorized channels (ASBA/UPI/Broker). Never share trading credentials, bank OTPs, or UPI PINs."*
 
-### 3. Commission Configuration Engine
+### 3. Commission on Profit Engine
 - **Discrete 2.5% Steps**: Rates are strictly bounded between **0.0% and 50.0%** in 21 discrete 2.5% increments:
   `0.0%, 2.5%, 5.0%, 7.5%, 10.0%, 12.5%, 15.0%, 17.5%, 20.0%, 22.5%, 25.0%, 27.5%, 30.0%, 32.5%, 35.0%, 37.5%, 40.0%, 42.5%, 45.0%, 47.5%, 50.0%`
-- **Documented Advisory Base Only**: Commissions apply solely to documented advisory or technical consulting service bases (never on IPO investment capital or profit-sharing).
-- **Interactive Calculator**: Live fee simulator computes exact advisory fee and effective total in INR with decimal-safe calculations.
+- **Commission on Listing Profit**: Demat account holders ask for a percentage commission on realized listing profits when applying for an IPO on behalf of the investor. No consultation or advisory fees are charged.
+- **Interactive Listing Profit Calculator**: Live profit simulator calculates exact Demat Holder Commission (`Profit * Rate%`) and Investor Net Profit (`Profit - Commission`) in INR with decimal-safe calculations.
 - **Immutable Audit Trail**: Any change to commission rates is stored in the `commissionhistories` collection with old rate, new rate, timestamp, and justification.
 
-### 4. KYC Onboarding & Verification Desk
+### 4. Mandatory KYC Onboarding & Guest Preview Mode
+- **Guest Exploration Mode**: Unregistered or unauthenticated users can explore the app, view live Upstox IPOs, inspect verified Demat holders, and simulate commission earnings across both Investor and Demat Holder views. However, all active operations (sending Pokes, accepting requests, chatting, or publishing rates) require complete registration and KYC verification.
+- **Mandatory KYC Upon Social Signup**: When users sign up via Google or Apple accounts, they are immediately directed to complete KYC. They are not permitted to log in to active platform features until identity verification documents (PAN, Aadhaar, Demat statement) are submitted and approved.
 - **Three-Tier Verification**:
-  1. `isEmailVerified` (via 6-digit OTP).
+  1. `isEmailVerified` (via 6-digit OTP or OAuth verification).
   2. `isMobileVerified` (via SMS OTP simulation).
   3. `isKycVerified` (via document upload and admin compliance inspection).
 - **Camera & Document Upload**: Live camera selfie capture with fallback document picker for Aadhaar and PAN cards.
@@ -344,7 +347,7 @@ A verified administrator account is provisioned in MongoDB:
 | :--- | :--- | :--- |
 | `PUT` | `/api/commission` | Update default commission rate (validated for 0-50% in 2.5% steps). |
 | `GET` | `/api/commission/history` | View auditable change history for user's commission rates. |
-| `POST` | `/api/commission/calculate` | Compute advisory fee on documented base with regulatory disclaimer. |
+| `POST` | `/api/commission/calculate` | Compute commission on realized listing profit with net breakdown. |
 
 ### Admin Console (`/api/admin`)
 | Method | Endpoint | Description |
@@ -430,8 +433,8 @@ To maintain strict compliance with SEBI (Securities and Exchange Board of India)
    All monetary applications must be submitted directly through official Application Supported by Blocked Amount (ASBA) net banking portals, registered stock broker apps, or authorized UPI mandate requests.
 3. **Never Share Credentials**:
    Users are prohibited from sharing trading passwords, Demat PINs, bank OTPs, or UPI security PINs. Pinned warnings enforce this in every chat room.
-4. **No Profit-Sharing**:
-   Commissions apply exclusively to documented technical assistance or advisory consultation base fees. Profit-sharing or guaranteed allocation claims are strictly prohibited by platform policy.
+4. **Agreed Profit Commission Margins**:
+   When an investor requests a Demat account holder to apply for an IPO on their behalf, the Demat account holder can specify a published commission on listing profit (0.0% to 50.0% in 2.5% increments). No upfront consultation or advisory fees are charged.
 
 ---
 

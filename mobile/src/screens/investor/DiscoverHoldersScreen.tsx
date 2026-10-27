@@ -23,8 +23,8 @@ import { useIpoStore } from '../../store/ipoStore';
 import { PokeButtonState } from '../../components/poke/PokeButton';
 
 export const DiscoverHoldersScreen: React.FC = () => {
-  const { user } = useAuthStore();
-  const { addToast, openChat } = useUIStore();
+  const { user, isGuestMode } = useAuthStore();
+  const { addToast, openChat, openGuestPromptModal } = useUIStore();
   const { selectedIpo } = useIpoStore();
 
   const [holders, setHolders] = useState<any[]>([]);
@@ -114,12 +114,17 @@ export const DiscoverHoldersScreen: React.FC = () => {
   };
 
   const handleSendPoke = async (holder: any) => {
+    if (isGuestMode || !user) {
+      openGuestPromptModal('Request Demat Account Holder to apply on your behalf');
+      return;
+    }
+
     try {
       const res = await api.post('/pokes', {
         recipientId: holder.id,
         ipoId: selectedIpo?.id,
         proposedCommissionRate: holder.defaultCommissionRate,
-        commissionBasis: holder.commissionBasis,
+        commissionBasis: holder.commissionBasis || 'Commission on Listing Profit',
         message: `Hello ${holder.fullName}, I would like to connect regarding ${selectedIpo ? selectedIpo.name : 'IPO'} assistance.`
       });
 
@@ -134,6 +139,11 @@ export const DiscoverHoldersScreen: React.FC = () => {
   };
 
   const handleCancelPoke = async (holderId: string) => {
+    if (isGuestMode || !user) {
+      openGuestPromptModal('Manage Requests');
+      return;
+    }
+
     const poke = getPokeForHolder(holderId);
     if (!poke) return;
 
@@ -149,6 +159,11 @@ export const DiscoverHoldersScreen: React.FC = () => {
   };
 
   const handleOpenChatForHolder = (holderId: string) => {
+    if (isGuestMode || !user) {
+      openGuestPromptModal('Chat with Demat Holders');
+      return;
+    }
+
     const conn = connections.find(
       (c) =>
         (c.userAId === holderId || c.userBId === holderId) &&

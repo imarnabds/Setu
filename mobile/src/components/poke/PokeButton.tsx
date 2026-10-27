@@ -12,6 +12,8 @@ import { typography } from '../../theme/typography';
 import { borderRadius, spacing, shadows } from '../../theme/spacing';
 import { Icon } from '../common/Icon';
 import { ConfirmationModal } from '../common/ConfirmationModal';
+import { useAuthStore } from '../../store/authStore';
+import { useUIStore } from '../../store/uiStore';
 
 export type PokeButtonState =
   | 'not_connected'
@@ -42,11 +44,18 @@ export const PokeButton: React.FC<PokeButtonProps> = ({
   onOpenChat,
   style
 }) => {
+  const { isGuestMode, isAuthenticated } = useAuthStore();
+  const { openGuestPromptModal } = useUIStore();
+
   const [loading, setLoading] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
 
   const handlePress = () => {
+    if (isGuestMode || !isAuthenticated) {
+      openGuestPromptModal(`request ${recipientName} to apply for an IPO on your behalf`);
+      return;
+    }
     if (state === 'not_connected') {
       setConfirmModalVisible(true);
     } else if (state === 'pending' && onCancelPoke) {
@@ -152,24 +161,24 @@ export const PokeButton: React.FC<PokeButtonProps> = ({
       {/* Confirmation sheet before sending Poke */}
       <ConfirmationModal
         visible={confirmModalVisible}
-        title={`Send Poke to ${recipientName}?`}
-        description={`Poking initiates an introduction. A private chat and service discussion will only become available after ${recipientName} accepts your request.`}
-        confirmLabel="Send Poke"
+        title={`Request ${recipientName} to Apply for IPO?`}
+        description={`This requests ${recipientName} to apply for the selected IPO on your behalf. Direct messaging unlocks once ${recipientName} accepts your request.`}
+        confirmLabel="Send Application Request"
         cancelLabel="Cancel"
         loading={loading}
         onConfirm={handleConfirmSend}
         onCancel={() => setConfirmModalVisible(false)}
       >
         <View style={styles.termsBox}>
-          <Text style={styles.termsTitle}>Published Service Terms:</Text>
+          <Text style={styles.termsTitle}>Agreed Profit Terms:</Text>
           <Text style={styles.termsRate}>
-            {commissionRate !== undefined ? `${commissionRate.toFixed(1)}% Commission` : 'Standard Terms'}
+            {commissionRate !== undefined ? `${commissionRate.toFixed(1)}% Commission on Profit` : 'Standard Terms'}
           </Text>
           <Text style={styles.termsBasis}>
-            Basis: {commissionBasis || 'Documented Advisory Service Fee Base'}
+            Basis: {commissionBasis || 'Commission on Listing Profit'}
           </Text>
           <Text style={styles.complianceDisclaimer}>
-            Important: The app facilitates lawful introductions. Actual IPO applications must use authorized channels (ASBA/UPI) in accordance with SEBI guidelines. Never share login passwords or OTPs.
+            Notice: If shares are allotted, the agreed commission percentage applies strictly to realized listing profits. Never share bank passwords, trading PINs, or OTPs.
           </Text>
         </View>
       </ConfirmationModal>

@@ -212,11 +212,11 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({
             </Text>
           </View>
           <Text style={styles.ipoChatRate}>
-            Agreed: {commissionRate}% Rate
+            Agreed: {commissionRate}% on Profit
           </Text>
         </View>
         <Text style={styles.ipoChatDisclaimer}>
-          This chat and all advisory guidance are strictly bounded to {connection?.ipoName || 'this IPO'}.
+          This IPO application request and agreed profit commission are strictly bounded to {connection?.ipoName || 'this IPO'}.
         </Text>
       </View>
 
@@ -228,14 +228,14 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({
           </View>
           <View style={styles.termsTextCol}>
             <Text style={styles.termsStatusTitle}>Verified Connection</Text>
-            <Text style={styles.termsSubtitle}>{connection?.ipoName || 'IPO Assistance'}</Text>
+            <Text style={styles.termsSubtitle}>{connection?.ipoName || 'IPO Application Request'}</Text>
           </View>
         </View>
 
         <View style={styles.termsRight}>
           <View style={styles.termsRateCol}>
             <Text style={styles.termsRateNumber}>{commissionRate}%</Text>
-            <Text style={styles.termsBasisSub}>(Per Application)</Text>
+            <Text style={styles.termsBasisSub}>(On Listing Profit)</Text>
           </View>
         </View>
       </View>

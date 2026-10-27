@@ -612,7 +612,7 @@ export const AdminConsoleScreen: React.FC = () => {
               </View>
               <Text style={styles.pokeTerms}>
                 Rate: {p.proposedCommissionRate !== undefined ? `${p.proposedCommissionRate}%` : 'Standard'} • Basis:{' '}
-                {p.commissionBasis || 'Advisory Base'}
+                {p.commissionBasis || 'Commission on Profit'}
               </Text>
               {p.message ? <Text style={styles.pokeMsg}>"{p.message}"</Text> : null}
             </View>

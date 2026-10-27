@@ -81,7 +81,7 @@ const UserSchema = new Schema(
     defaultCommissionRate: { type: Number, default: 5.0, min: 0, max: 50 },
     commissionBasis: {
       type: String,
-      default: 'Fixed Advisory / Application Service Fee Base'
+      default: 'Commission on Listing Profit'
     },
     isAvailable: { type: Boolean, default: true },
     refreshToken: String,

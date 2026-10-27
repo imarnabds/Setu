@@ -12,6 +12,8 @@ interface UIState {
   activeHolderModalUser: any | null;
   isNotificationsOpen: boolean;
   isKycModalOpen: boolean;
+  isGuestPromptModalOpen: boolean;
+  guestPromptAction: string;
   toasts: ToastMessage[];
   unreadNotificationsCount: number;
   unreadMessagesCount: number;
@@ -22,6 +24,8 @@ interface UIState {
   closeHolderModal: () => void;
   setNotificationsOpen: (open: boolean) => void;
   setKycModalOpen: (open: boolean) => void;
+  openGuestPromptModal: (actionName?: string) => void;
+  closeGuestPromptModal: () => void;
   addToast: (message: string, type?: 'success' | 'error' | 'info') => void;
   removeToast: (id: string) => void;
   setUnreadNotificationsCount: (count: number) => void;
@@ -34,6 +38,8 @@ export const useUIStore = create<UIState>((set) => ({
   activeHolderModalUser: null,
   isNotificationsOpen: false,
   isKycModalOpen: false,
+  isGuestPromptModalOpen: false,
+  guestPromptAction: 'interact with market participants',
   toasts: [],
   unreadNotificationsCount: 0,
   unreadMessagesCount: 0,
@@ -45,6 +51,9 @@ export const useUIStore = create<UIState>((set) => ({
   closeHolderModal: () => set({ activeHolderModalUser: null }),
   setNotificationsOpen: (open) => set({ isNotificationsOpen: open }),
   setKycModalOpen: (open) => set({ isKycModalOpen: open }),
+  openGuestPromptModal: (actionName = 'interact with market participants') =>
+    set({ isGuestPromptModalOpen: true, guestPromptAction: actionName }),
+  closeGuestPromptModal: () => set({ isGuestPromptModalOpen: false }),
 
   addToast: (message, type = 'info') => {
     const id = 'toast_' + Math.random().toString(36).substring(2, 9);

@@ -19,8 +19,8 @@ import { useUIStore } from '../../store/uiStore';
 import { api } from '../../services/api';
 
 export const InvestorHomeScreen: React.FC = () => {
-  const { user } = useAuthStore();
-  const { setActiveTab, openChat, addToast } = useUIStore();
+  const { user, isGuestMode, isAuthenticated } = useAuthStore();
+  const { setActiveTab, openChat, addToast, openGuestPromptModal } = useUIStore();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [holders, setHolders] = useState<any[]>([]);
@@ -77,6 +77,10 @@ export const InvestorHomeScreen: React.FC = () => {
   };
 
   const handleSendPoke = async (holder: any) => {
+    if (isGuestMode || !isAuthenticated) {
+      openGuestPromptModal(`request ${holder.fullName} to apply for an IPO on your behalf`);
+      return;
+    }
     const status = getPokeStatus(holder.id);
     if (status === 'connected') {
       const conn = connections.find(
@@ -95,7 +99,7 @@ export const InvestorHomeScreen: React.FC = () => {
       const res = await api.post('/pokes', {
         recipientId: holder.id,
         proposedCommissionRate: holder.defaultCommissionRate || 5.0,
-        proposedCommissionBasis: holder.commissionBasis || 'Advisory Base Fee'
+        proposedCommissionBasis: holder.commissionBasis || 'Commission on Listing Profit'
       });
 
       if (res.data?.success) {

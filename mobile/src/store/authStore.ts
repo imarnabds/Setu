@@ -44,11 +44,14 @@ interface AuthState {
   user: User | null;
   activeRole: 'investor' | 'demat_holder' | 'admin';
   isAuthenticated: boolean;
+  isGuestMode: boolean;
   isLoading: boolean;
   error: string | null;
   setAuth: (user: User, accessToken: string, refreshToken: string) => void;
   updateUser: (updates: Partial<User>) => void;
   switchRole: (newRole: 'investor' | 'demat_holder' | 'admin') => void;
+  enterGuestMode: (role?: 'investor' | 'demat_holder') => void;
+  exitGuestMode: () => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
@@ -57,6 +60,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   activeRole: 'investor',
   isAuthenticated: false,
+  isGuestMode: false,
   isLoading: true,
   error: null,
 
@@ -67,8 +71,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       user,
       activeRole: user.primaryRole,
       isAuthenticated: true,
+      isGuestMode: false,
       isLoading: false,
       error: null
+    });
+  },
+
+  enterGuestMode: (role = 'investor') => {
+    set({
+      isGuestMode: true,
+      isAuthenticated: false,
+      activeRole: role,
+      user: null,
+      isLoading: false,
+      error: null
+    });
+  },
+
+  exitGuestMode: () => {
+    set({
+      isGuestMode: false,
+      user: null
     });
   },
 

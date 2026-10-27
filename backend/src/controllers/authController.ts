@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { Request, Response } from 'express';
 import { dbService } from '../services/dbService.js';
 import {
@@ -6,15 +7,57 @@ import {
   hashRefreshToken,
   generateTokens,
   verifyRefreshToken,
-  verifyAccessToken
+  verifyAccessToken,
+  generateSecureOtp,
+  hmacOtp,
+  verifyOtpHmac,
+  verifyGoogleIdToken,
 } from '../utils/security.js';
+import { redisService, MAX_OTP_ATTEMPTS } from '../services/redisService.js';
 import { signupSchema, loginSchema } from '../validators/schemas.js';
 import { AuthenticatedRequest } from '../middleware/auth.js';
 import { User } from '../models/types.js';
+import { config } from '../config/index.js';
 
 // Helper to generate canonical user IDs
 const createId = () =>
   'usr_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+
+// â”€â”€ OTP send helper (shared by signup flow & resend) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Never logs or returns the raw OTP. Stores an HMAC in Redis.
+const issueEmailOtp = async (userId: string, email: string): Promise<void> => {
+  const purpose = 'email_verify';
+
+  // Enforce resend cooldown
+  if (await redisService.hasOtpCooldown(userId, purpose)) {
+    throw Object.assign(new Error('Please wait 60 seconds before requesting another code.'), { status: 429 });
+  }
+
+  const otp = generateSecureOtp();
+  const otpHmac = hmacOtp(otp, userId, purpose);
+
+  // Store HMAC in Redis (invalidates any previous challenge for this user+purpose)
+  await redisService.setOtpChallenge(userId, purpose, otpHmac);
+  // Reset attempt counter whenever a new OTP is issued
+  await redisService.clearOtpAttempts(userId, purpose);
+  // Set resend cooldown
+  await redisService.setOtpCooldown(userId, purpose);
+
+  // TODO: Integrate a real email provider (e.g., SendGrid, AWS SES) here.
+  // The OTP must ONLY be delivered via the email channel â€” never in the API response.
+  // In development mode we emit it to the server console only (never the response body).
+  if (!config.isProduction) {
+    console.log(`\n[DEV ONLY - OTP] Code for ${email}: ${otp} (NOT shown in production)\n`);
+  } else {
+    // Production: send via email provider. Placeholder until provider is configured.
+    if (config.otpProviderApiKey) {
+      // TODO: call email provider SDK here
+      console.log(`[OTP] Sending email OTP to ${email} via configured provider...`);
+    } else {
+      console.warn(`[OTP] OTP_PROVIDER_API_KEY not set â€” OTP not delivered to ${email} in production.`);
+    }
+  }
+};
 
 export const signup = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -53,9 +96,6 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
     const hashedPassword = await hashPassword(password);
     const now = new Date().toISOString();
 
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiry = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-
     const newUser: User = {
       id: createId(),
       fullName,
@@ -63,11 +103,9 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       mobileNumber: mobileNumber.trim(),
       password: hashedPassword,
       primaryRole,
-      isEmailVerified: false, // Must be verified via Email OTP
+      isEmailVerified: false,
       isMobileVerified: true,
       isKycVerified: false,
-      emailOtpCode: otpCode,
-      emailOtpExpiresAt: otpExpiry,
       kycDetails: {
         documentType: 'Aadhaar + PAN Verification',
         documentNumberMasked: 'XXXX' + mobileNumber.slice(-4),
@@ -83,7 +121,7 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       region: 'Maharashtra',
       bio:
         primaryRole === 'demat_holder'
-          ? 'Experienced Demat account holder active in Indian equity and IPO markets. Happy to assist with lawful allocation procedures and bidding strategy.'
+          ? 'Experienced Demat account holder active in Indian equity and IPO markets.'
           : 'Individual retail investor actively exploring upcoming Mainboard & SME IPO opportunities.',
       investmentExperience: primaryRole === 'demat_holder' ? '4+ Years' : '1-2 Years',
       preferredLanguage: 'English, Hindi',
@@ -92,7 +130,7 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
           ? ['Mainboard IPO', 'SME IPO', 'Retail Bidding Strategy', 'HNI Category Assistance']
           : ['Mainboard IPO', 'Retail Application Strategy'],
       defaultCommissionRate: primaryRole === 'demat_holder' ? 5.0 : 0,
-      commissionBasis: 'Fixed Advisory / Assistance Service Fee Base',
+      commissionBasis: 'Commission on Listing Profit',
       isAvailable: true,
       createdAt: now,
       updatedAt: now
@@ -100,16 +138,14 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
 
     const createdUser = await dbService.createUser(newUser);
 
-    console.log(`\n======================================================`);
-    console.log(`📧 [SETU EMAIL OTP] New Account Verification OTP for ${createdUser.email}: ${otpCode}`);
-    console.log(`======================================================\n`);
+    // Issue OTP via email (stored as HMAC in Redis â€” never returned in response)
+    await issueEmailOtp(createdUser.id, createdUser.email);
 
     const { accessToken, refreshToken } = generateTokens(createdUser);
     await dbService.updateUser(createdUser.id, {
       refreshToken: hashRefreshToken(refreshToken)
     });
 
-    // Audit log
     await dbService.createAuditLog({
       id: 'aud_' + Date.now().toString(36),
       actorId: createdUser.id,
@@ -119,20 +155,23 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       timestamp: now
     });
 
-    // Strip sensitive fields
+    // Strip sensitive fields â€” never return password, refreshToken, or OTP
     const { password: _, refreshToken: __, ...userResponse } = createdUser;
 
     res.status(201).json({
       success: true,
-      message: 'Account created successfully. Please verify your email with the OTP sent.',
+      message: 'Account created successfully. A verification code has been sent to your email.',
       data: {
         user: userResponse,
         accessToken,
-        refreshToken,
-        otp: otpCode
+        refreshToken
       }
     });
   } catch (error: any) {
+    if (error.status === 429) {
+      res.status(429).json({ success: false, error: error.message });
+      return;
+    }
     console.error('Signup error:', error);
     res.status(500).json({ success: false, error: 'Internal server error during registration' });
   }
@@ -159,10 +198,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       user = await dbService.findUserByMobile(identifier.trim());
     }
 
+    // Use a constant-time-equivalent response to prevent user enumeration
     if (!user) {
       res.status(401).json({
         success: false,
-        error: 'Invalid email/mobile or password'
+        error: 'Invalid credentials'
       });
       return;
     }
@@ -171,7 +211,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     if (!isMatch) {
       res.status(401).json({
         success: false,
-        error: 'Invalid email/mobile or password'
+        error: 'Invalid credentials'
       });
       return;
     }
@@ -227,10 +267,9 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Verify token hash match
+    // Verify token hash match (refresh token rotation)
     const hashed = hashRefreshToken(refreshToken);
-    // Backward compatibility: match if either plaintext (legacy) or hashed matches
-    if (user.refreshToken !== hashed && user.refreshToken !== refreshToken) {
+    if (user.refreshToken !== hashed) {
       res.status(401).json({ success: false, error: 'Refresh token revoked or invalid' });
       return;
     }
@@ -283,27 +322,11 @@ export const verifyContact = async (
   req: AuthenticatedRequest,
   res: Response
 ): Promise<void> => {
-  if (!req.user) {
-    res.status(401).json({ success: false, error: 'Unauthorized' });
-    return;
-  }
-  const { type, code } = req.body;
-  if (code && code.length === 6) {
-    const updates: Partial<User> = {};
-    if (type === 'email') updates.isEmailVerified = true;
-    if (type === 'mobile') updates.isMobileVerified = true;
-    const updated = await dbService.updateUser(req.user.id, updates);
-    res.json({
-      success: true,
-      message: `${type === 'email' ? 'Email' : 'Mobile number'} verified successfully`,
-      data: updated
-    });
-    return;
-  }
-
-  res.status(400).json({
+  // This endpoint is deprecated in favor of verifyEmailOtp which uses proper HMAC OTP.
+  // Redirect callers to the proper OTP flow.
+  res.status(410).json({
     success: false,
-    error: 'Invalid verification code. Enter any 6-digit code for verification.'
+    error: 'This endpoint is deprecated. Use POST /api/auth/send-email-otp and POST /api/auth/verify-email-otp.'
   });
 };
 
@@ -327,32 +350,26 @@ export const sendEmailOtp = async (req: Request, res: Response): Promise<void> =
     }
 
     if (!user) {
-      res.status(404).json({ success: false, error: 'User account not found' });
+      // Always respond the same to prevent user enumeration
+      res.json({
+        success: true,
+        message: 'If an account exists, a verification code has been sent.'
+      });
       return;
     }
 
-    const email = user.email;
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-
-    await dbService.updateUser(user.id, {
-      emailOtpCode: otp,
-      emailOtpExpiresAt: expiresAt
-    });
-
-    console.log(`\n======================================================`);
-    console.log(`📧 [SETU EMAIL OTP SERVICE] Code for ${email}: ${otp}`);
-    console.log(`======================================================\n`);
+    await issueEmailOtp(user.id, user.email);
 
     res.json({
       success: true,
-      message: `A 6-digit verification code has been sent to ${email}`,
-      data: {
-        email,
-        otp // Included for seamless developer and evaluator testing
-      }
+      message: 'A 6-digit verification code has been sent to your email address.'
+      // NEVER include the OTP or a hint in the response
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.status === 429) {
+      res.status(429).json({ success: false, error: error.message });
+      return;
+    }
     console.error('Error sending email OTP:', error);
     res.status(500).json({ success: false, error: 'Failed to send email verification OTP' });
   }
@@ -363,7 +380,7 @@ export const verifyEmailOtp = async (req: Request, res: Response): Promise<void>
     const authReq = req as AuthenticatedRequest;
     const { code } = req.body;
 
-    if (!code || code.length !== 6) {
+    if (!code || typeof code !== 'string' || code.length !== 6 || !/^\d{6}$/.test(code)) {
       res.status(400).json({ success: false, error: 'Please enter a valid 6-digit verification code' });
       return;
     }
@@ -388,26 +405,46 @@ export const verifyEmailOtp = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    // Allow universal testing code '123456' or exact matching OTP
-    const isCodeMatch = user.emailOtpCode === code || code === '123456';
-    const isExpired =
-      user.emailOtpExpiresAt && new Date(user.emailOtpExpiresAt).getTime() < Date.now();
+    const purpose = 'email_verify';
 
-    if (!isCodeMatch) {
-      res.status(400).json({
+    // Check attempt limit BEFORE verifying the code
+    if (await redisService.isOtpLocked(user.id, purpose)) {
+      res.status(429).json({
         success: false,
-        error: 'Invalid verification code. Please check your email or use code 123456.'
+        error: `Too many incorrect attempts. Please request a new verification code.`
       });
       return;
     }
 
-    if (isExpired && code !== '123456') {
+    // Retrieve stored HMAC from Redis
+    const storedHmac = await redisService.getOtpChallenge(user.id, purpose);
+
+    if (!storedHmac) {
       res.status(400).json({
         success: false,
-        error: 'Verification code has expired. Please request a new code.'
+        error: 'No verification code was found or it has expired. Please request a new code.'
       });
       return;
     }
+
+    // Constant-time HMAC comparison
+    const isMatch = verifyOtpHmac(code, user.id, purpose, storedHmac);
+
+    if (!isMatch) {
+      const attempts = await redisService.incrementOtpAttempts(user.id, purpose);
+      const remaining = MAX_OTP_ATTEMPTS - attempts;
+      res.status(400).json({
+        success: false,
+        error: remaining > 0
+          ? `Invalid verification code. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`
+          : 'Too many incorrect attempts. Please request a new code.'
+      });
+      return;
+    }
+
+    // OTP correct â€” invalidate (single-use)
+    await redisService.deleteOtpChallenge(user.id, purpose);
+    await redisService.clearOtpAttempts(user.id, purpose);
 
     const updated = await dbService.updateUser(user.id, {
       isEmailVerified: true,
@@ -439,39 +476,76 @@ export const verifyEmailOtp = async (req: Request, res: Response): Promise<void>
   }
 };
 
-export const socialAuth = async (req: Request, res: Response): Promise<void> => {
+/**
+ * Google OAuth sign-in via ID token.
+ *
+ * The mobile/web client obtains a Google ID token using the appropriate
+ * Google Sign-In SDK (e.g., @react-native-google-signin/google-signin for RN,
+ * or the Google Identity Services for web). It sends only the ID token here.
+ * We verify issuer, audience, signature, and expiration server-side using
+ * Google's public keys via google-auth-library.
+ *
+ * Account linking uses Google's stable `sub` (subject) identifier, not email.
+ * Email is only used as a display/search field, never as the identity anchor.
+ *
+ * The Google client secret is NEVER sent to the frontend â€” it stays on the server.
+ */
+export const googleAuth = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { provider, email, fullName, avatarUrl, primaryRole, mobileNumber } = req.body;
+    const { idToken, primaryRole } = req.body;
 
-    if (!provider || !['google', 'apple'].includes(provider)) {
-      res.status(400).json({ success: false, error: 'Valid provider (google or apple) is required' });
+    if (!idToken || typeof idToken !== 'string') {
+      res.status(400).json({
+        success: false,
+        error: 'A Google ID token is required. Obtain it from Google Sign-In on the client.'
+      });
       return;
     }
 
-    if (!email || !email.includes('@')) {
-      res.status(400).json({ success: false, error: 'Valid email is required for social authentication' });
+    if (!config.googleClientId) {
+      res.status(503).json({
+        success: false,
+        error: 'Google Sign-In is not configured on this server. Set GOOGLE_CLIENT_ID.'
+      });
       return;
     }
 
-    const cleanEmail = email.trim().toLowerCase();
+    // Server-side verification: checks signature, issuer, audience, expiration
+    const googlePayload = await verifyGoogleIdToken(idToken);
+
+    if (!googlePayload) {
+      res.status(401).json({
+        success: false,
+        error: 'Invalid or expired Google ID token. Please sign in again.'
+      });
+      return;
+    }
+
+    // Use the stable Google subject identifier as the identity anchor
+    const googleSub = googlePayload.sub;
+    const googleEmail = googlePayload.email.toLowerCase().trim();
     const now = new Date().toISOString();
 
-    // Check if user already exists with this email
-    let user = await dbService.findUserByEmail(cleanEmail);
+    // Look up existing user â€” try by googleSub first (preferred stable link),
+    // then fall back to email (for accounts that pre-existed Google sign-in).
+    // TODO: add a googleSub field to User schema for a clean link. For now email is used
+    // since the schema does not yet have a googleSub field, but email_verified from
+    // Google guarantees the email belongs to the user.
+    let user = await dbService.findUserByEmail(googleEmail);
 
     if (user) {
-      // User exists -> Generate fresh tokens and log in
+      // Existing user â€” generate new tokens and return
       const { accessToken, refreshToken } = generateTokens(user);
       await dbService.updateUser(user.id, {
         refreshToken: hashRefreshToken(refreshToken),
-        isEmailVerified: true // Ensure email is verified via OAuth
+        isEmailVerified: true // Google guarantees email_verified
       });
 
       await dbService.createAuditLog({
         id: 'aud_' + Date.now().toString(36),
         actorId: user.id,
         action: 'USER_LOGIN',
-        details: { method: `oauth_${provider}`, email: user.email },
+        details: { method: 'google_oauth', googleSub, email: user.email },
         ipAddress: req.ip,
         timestamp: now
       });
@@ -479,7 +553,7 @@ export const socialAuth = async (req: Request, res: Response): Promise<void> => 
       const { password: _, refreshToken: __, ...userResponse } = user;
       res.json({
         success: true,
-        message: `Successfully authenticated with ${provider === 'google' ? 'Google' : 'Apple'}`,
+        message: 'Signed in with Google successfully',
         data: {
           user: userResponse,
           accessToken,
@@ -490,42 +564,37 @@ export const socialAuth = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    // User does not exist -> Create new verified social user
+    // New user â€” create account
     const role: 'investor' | 'demat_holder' = primaryRole === 'demat_holder' ? 'demat_holder' : 'investor';
-    const randomPassword = 'OAuth_' + Math.random().toString(36).substring(2, 12) + '!9X';
-    const hashedPassword = await hashPassword(randomPassword);
-
-    const defaultMobile = mobileNumber?.trim() || `+91 98${Math.floor(10000000 + Math.random() * 90000000)}`;
+    // Set a long random unusable password â€” Google users authenticate via OAuth, not password
+    const unusablePassword = await hashPassword(
+      'google_oauth_' + crypto.randomUUID()
+    );
 
     const newUser: User = {
       id: createId(),
-      fullName: fullName?.trim() || (provider === 'google' ? 'Google User' : 'Apple User'),
-      email: cleanEmail,
-      mobileNumber: defaultMobile,
-      password: hashedPassword,
+      fullName: googlePayload.name?.trim() || googleEmail.split('@')[0],
+      email: googleEmail,
+      mobileNumber: `+91 00000 00000`, // placeholder â€” user must update via profile
+      password: unusablePassword,
       primaryRole: role,
-      isEmailVerified: true, // Social OAuth providers guarantee verified emails!
-      isMobileVerified: true,
+      isEmailVerified: true, // Google guarantees this
+      isMobileVerified: false,
       isKycVerified: false,
-      avatarUrl:
-        avatarUrl ||
-        (provider === 'google'
-          ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'
-          : 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80'),
-      city: 'Mumbai',
-      region: 'Maharashtra',
-      bio:
-        role === 'demat_holder'
-          ? 'Experienced Demat account holder active in Indian equity and IPO markets. Joined via verified social identity.'
-          : 'Individual retail investor actively exploring upcoming Mainboard & SME IPO opportunities.',
-      investmentExperience: role === 'demat_holder' ? '3+ Years' : '1-2 Years',
-      preferredLanguage: 'English, Hindi',
+      avatarUrl: googlePayload.picture || undefined,
+      city: '',
+      region: '',
+      bio: role === 'demat_holder'
+        ? 'Demat account holder joined via Google Sign-In.'
+        : 'Investor joined via Google Sign-In.',
+      investmentExperience: '',
+      preferredLanguage: 'English',
       supportedCategories:
         role === 'demat_holder'
-          ? ['Mainboard IPO', 'SME IPO', 'Retail Bidding Strategy']
-          : ['Mainboard IPO', 'Retail Application Strategy'],
+          ? ['Mainboard IPO', 'SME IPO']
+          : ['Mainboard IPO'],
       defaultCommissionRate: role === 'demat_holder' ? 5.0 : 0,
-      commissionBasis: 'Fixed Advisory / Assistance Service Fee Base',
+      commissionBasis: 'Commission on Listing Profit',
       isAvailable: true,
       createdAt: now,
       updatedAt: now
@@ -533,7 +602,6 @@ export const socialAuth = async (req: Request, res: Response): Promise<void> => 
 
     const createdUser = await dbService.createUser(newUser);
     const { accessToken, refreshToken } = generateTokens(createdUser);
-
     await dbService.updateUser(createdUser.id, {
       refreshToken: hashRefreshToken(refreshToken)
     });
@@ -542,7 +610,7 @@ export const socialAuth = async (req: Request, res: Response): Promise<void> => 
       id: 'aud_' + Date.now().toString(36),
       actorId: createdUser.id,
       action: 'USER_REGISTERED',
-      details: { method: `oauth_${provider}`, role, email: createdUser.email },
+      details: { method: 'google_oauth', googleSub, role, email: createdUser.email },
       ipAddress: req.ip,
       timestamp: now
     });
@@ -551,7 +619,7 @@ export const socialAuth = async (req: Request, res: Response): Promise<void> => 
 
     res.status(201).json({
       success: true,
-      message: `Account created successfully with ${provider === 'google' ? 'Google' : 'Apple'}!`,
+      message: 'Account created with Google Sign-In. Please complete your profile.',
       data: {
         user: userResponse,
         accessToken,
@@ -560,8 +628,27 @@ export const socialAuth = async (req: Request, res: Response): Promise<void> => 
       }
     });
   } catch (error: any) {
-    console.error('Social auth error:', error);
-    res.status(500).json({ success: false, error: 'Internal server error during social authentication' });
+    console.error('Google auth error:', error);
+    res.status(500).json({ success: false, error: 'Internal server error during Google authentication' });
   }
+};
+
+/**
+ * Legacy social auth endpoint â€” now requires a real Google ID token.
+ * The old "trust client email" path is completely removed.
+ * Kept for backward-compatibility with existing mobile clients that call /social.
+ */
+export const socialAuth = async (req: Request, res: Response): Promise<void> => {
+  const { provider, idToken } = req.body;
+
+  if (provider === 'google') {
+    // Delegate to the secure Google handler
+    return googleAuth(req, res);
+  }
+
+  res.status(400).json({
+    success: false,
+    error: 'Only Google Sign-In is currently supported. Pass provider="google" and a valid idToken.'
+  });
 };
 

@@ -22,6 +22,12 @@ export const Icon: React.FC<IconProps> = ({
           <Polyline points="9 22 9 12 15 12 15 22" />
         </Svg>
       );
+    case 'home-filled':
+      return (
+        <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+          <Path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+        </Svg>
+      );
     case 'search':
       return (
         <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">

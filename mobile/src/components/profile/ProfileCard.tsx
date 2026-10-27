@@ -99,7 +99,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           <Icon name="shield" size={12} color={colors.secondaryText} />
           <Text numberOfLines={1} style={styles.basisText}>
             {user.primaryRole === 'demat_holder'
-              ? user.commissionBasis || 'Advisory Base Fee'
+              ? user.commissionBasis || 'Commission on Profit'
               : 'Verified Active Investor'}
           </Text>
         </View>

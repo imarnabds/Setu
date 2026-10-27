@@ -172,6 +172,14 @@ export const SocialAuthModal: React.FC<SocialAuthModalProps> = ({
             </View>
           </View>
 
+          {/* Mandatory KYC Notice */}
+          <View style={styles.kycWarningCard}>
+            <Icon name="shield" size={14} color="#D97706" />
+            <Text style={styles.kycWarningText}>
+              <Text style={{ fontWeight: '700' }}>Mandatory Next Step:</Text> After signing in, you will be directed immediately to complete KYC verification. You must be verified before login to active networking is permitted.
+            </Text>
+          </View>
+
           {/* Provider Specific Interface */}
           {provider === 'google' ? (
             <View style={styles.accountList}>
@@ -573,5 +581,22 @@ const styles = StyleSheet.create({
     color: colors.mutedText,
     textAlign: 'center',
     lineHeight: 14
+  },
+  kycWarningCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+    borderRadius: borderRadius.md,
+    padding: spacing.sm,
+    gap: 8,
+    marginBottom: spacing.md
+  },
+  kycWarningText: {
+    flex: 1,
+    fontSize: 11,
+    color: '#92400E',
+    lineHeight: 16
   }
 });

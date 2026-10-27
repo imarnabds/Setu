@@ -19,12 +19,23 @@ import { api } from '../../services/api';
 interface WelcomeScreenProps {
   onGetStarted: () => void;
   onLogin: () => void;
+  onExploreAsGuest?: () => void;
 }
 
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   onGetStarted,
-  onLogin
+  onLogin,
+  onExploreAsGuest
 }) => {
+  const { enterGuestMode } = useAuthStore();
+
+  const handleGuestExplore = () => {
+    if (onExploreAsGuest) {
+      onExploreAsGuest();
+    } else {
+      enterGuestMode('investor');
+    }
+  };
 
   return (
     <ScrollView
@@ -183,6 +194,19 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         <Text style={styles.getStartedText}>Get started</Text>
         <Icon name="arrow-right" size={18} color="#FFFFFF" strokeWidth={2.5} />
       </TouchableOpacity>
+
+      {/* Explore App as Guest Button */}
+      <TouchableOpacity
+        style={styles.exploreGuestButton}
+        activeOpacity={0.85}
+        onPress={handleGuestExplore}
+      >
+        <Icon name="search" size={16} color={colors.primaryBlue} />
+        <Text style={styles.exploreGuestText}>Explore App as Guest</Text>
+      </TouchableOpacity>
+      <Text style={styles.exploreGuestSub}>
+        Preview live IPOs, Demat holders & see how Setu works without login
+      </Text>
 
       {/* Login Navigation Link */}
       <View style={styles.loginRow}>
@@ -447,6 +471,33 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     color: colors.primaryBlue,
     fontWeight: typography.weights.bold
+  },
+  exploreGuestButton: {
+    width: '100%',
+    height: 48,
+    borderRadius: borderRadius.button,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#93C5FD',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: spacing.sm,
+    ...shadows.sm
+  },
+  exploreGuestText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    color: colors.primaryBlue
+  },
+  exploreGuestSub: {
+    fontSize: 11,
+    color: colors.secondaryText,
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.md
   },
   statutoryFooter: {
     flexDirection: 'row',

@@ -84,14 +84,14 @@ export const HolderProfileScreen: React.FC = () => {
       <View style={styles.sectionCard}>
         <View style={styles.commHeader}>
           <View>
-            <Text style={styles.commTitle}>Published Service Terms</Text>
+            <Text style={styles.commTitle}>Published Commission on Profit</Text>
             <Text style={styles.commRate}>
               {user?.defaultCommissionRate !== undefined
                 ? `${user.defaultCommissionRate.toFixed(1)}%`
-                : '5.0%'} Rate
+                : '5.0%'} on Listing Profit
             </Text>
             <Text style={styles.commBasis}>
-              Basis: {user?.commissionBasis || 'Documented Advisory Base'}
+              Basis: {user?.commissionBasis || 'Commission on Listing Profit'}
             </Text>
           </View>
           <TouchableOpacity

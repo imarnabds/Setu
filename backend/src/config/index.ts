@@ -3,25 +3,34 @@ dotenv.config();
 
 const nodeEnv = process.env.NODE_ENV || 'development';
 const isProduction = nodeEnv === 'production';
-const jwtSecret = process.env.JWT_SECRET;
-const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+// Support JWT_ACCESS_SECRET (preferred) or JWT_SECRET (legacy)
+const jwtSecret = process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
+const refreshTokenSecret = process.env.JWT_REFRESH_SECRET || process.env.REFRESH_TOKEN_SECRET;
 
 // Fail fast in production if security secrets are missing or insecure
 if (isProduction) {
-  if (!jwtSecret || jwtSecret.length < 32 || jwtSecret.includes('dev-only') || jwtSecret.includes('super-secret')) {
+  if (!jwtSecret || jwtSecret.length < 32 || jwtSecret.includes('dev-only') || jwtSecret.includes('replace_with')) {
     throw new Error(
-      '[FATAL SECURITY CONFIGURATION] In production, JWT_SECRET must be set via environment variable and contain at least 32 characters.'
+      '[FATAL] In production, JWT_ACCESS_SECRET must be set and contain at least 32 random characters. Generate with: openssl rand -hex 32'
     );
   }
-  if (!refreshTokenSecret || refreshTokenSecret.length < 32 || refreshTokenSecret.includes('dev-only') || refreshTokenSecret.includes('refresh-secret')) {
+  if (!refreshTokenSecret || refreshTokenSecret.length < 32 || refreshTokenSecret.includes('dev-only') || refreshTokenSecret.includes('replace_with')) {
     throw new Error(
-      '[FATAL SECURITY CONFIGURATION] In production, REFRESH_TOKEN_SECRET must be set via environment variable and contain at least 32 characters.'
+      '[FATAL] In production, JWT_REFRESH_SECRET must be set and contain at least 32 random characters.'
     );
   }
   if (!process.env.MONGODB_URI) {
     throw new Error(
-      '[FATAL DATABASE CONFIGURATION] In production, MONGODB_URI must be provided for persistent MongoDB Atlas storage.'
+      '[FATAL] In production, MONGODB_URI must be provided.'
     );
+  }
+  if (!process.env.OTP_HMAC_SECRET || process.env.OTP_HMAC_SECRET.length < 32) {
+    throw new Error(
+      '[FATAL] In production, OTP_HMAC_SECRET must be set (min 32 chars) to hash OTP challenges.'
+    );
+  }
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    console.warn('[WARN] GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET not set — Google OAuth will be disabled.');
   }
 }
 
@@ -39,14 +48,28 @@ const corsOrigins: string[] = rawCors
 export const config = {
   port: parseInt(process.env.PORT || '5000', 10),
   nodeEnv,
-  jwtSecret: jwtSecret || 'dev-only-secret-jwt-key-not-for-production-use-min-32-chars-long!',
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '2h',
-  refreshTokenSecret: refreshTokenSecret || 'dev-only-refresh-secret-jwt-key-not-for-production-min-32-chars!',
+  isProduction,
+  jwtSecret: jwtSecret || 'dev-only-jwt-access-secret-not-for-production-use-min-32!',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || '15m',
+  refreshTokenSecret: refreshTokenSecret || 'dev-only-jwt-refresh-secret-not-for-production-min-32!',
   refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '7d',
   mongodbUri: process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/setu_database',
   corsOrigins,
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:8081',
   appName: process.env.APP_NAME || 'Setu',
+  // Redis — ephemeral state (OTP, rate-limit, revocation)
+  redisUrl: process.env.REDIS_URL || '',
+  // Google OAuth 2.0
+  googleClientId: process.env.GOOGLE_CLIENT_ID || '',
+  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+  // OTP HMAC secret — used to hash OTP before storage, never store raw OTP
+  otpHmacSecret: process.env.OTP_HMAC_SECRET || 'dev-only-otp-hmac-secret-min-32-chars-replace-in-prod!',
+  // OTP provider (email/SMS) — pluggable
+  otpProviderApiKey: process.env.OTP_PROVIDER_API_KEY || '',
+  otpProviderSenderId: process.env.OTP_PROVIDER_SENDER_ID || 'Setu',
+  // Cloudflare (infrastructure-level, not code-enforced)
+  cloudflareZoneId: process.env.CLOUDFLARE_ZONE_ID || '',
+  cloudflareApiToken: process.env.CLOUDFLARE_API_TOKEN || '',
   // Upstox API & IPO Sync Configuration
   upstoxApiBaseUrl: process.env.UPSTOX_API_BASE_URL || 'https://api.upstox.com/v2',
   upstoxAccessToken: process.env.UPSTOX_ACCESS_TOKEN || '',

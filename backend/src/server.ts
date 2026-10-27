@@ -11,6 +11,7 @@ import { connectDatabase, isDatabaseConnected } from './config/database.js';
 import { socketService } from './services/socketService.js';
 import { ensureAdminAndKycData } from './services/adminSeed.js';
 import { upstoxIpoService } from './services/upstoxIpoService.js';
+import { redisService } from './services/redisService.js';
 
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
@@ -79,10 +80,10 @@ app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 app.use(morgan('dev'));
 
-// Rate limiting
+// Rate limiting — general API
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 300, // Limit each IP to 300 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -92,11 +93,36 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
+// Tighter rate limit on authentication and OTP endpoints (abuse-prone)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Too many authentication attempts. Please try again in 15 minutes.' }
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/signup', authLimiter);
+app.use('/api/auth/google', authLimiter);
+app.use('/api/auth/social', authLimiter);
+
+const otpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Too many OTP requests. Please try again in 15 minutes.' }
+});
+app.use('/api/auth/send-email-otp', otpLimiter);
+app.use('/api/auth/verify-email-otp', otpLimiter);
+app.use('/api/auth/forgot-password', otpLimiter);
+
 // Health Check
 app.get('/health', (req: Request, res: Response) => {
   res.json({
     status: isDatabaseConnected() ? 'healthy' : 'degraded',
     database: isDatabaseConnected() ? 'connected' : 'disconnected',
+    redis: redisService.isAvailable ? 'connected' : 'unavailable',
     app: config.appName,
     environment: config.nodeEnv,
     timestamp: new Date().toISOString(),
@@ -107,6 +133,7 @@ app.get('/api/health', (req: Request, res: Response) => {
   res.json({
     status: isDatabaseConnected() ? 'healthy' : 'degraded',
     database: isDatabaseConnected() ? 'connected' : 'disconnected',
+    redis: redisService.isAvailable ? 'connected' : 'unavailable',
     app: config.appName,
     environment: config.nodeEnv,
     timestamp: new Date().toISOString(),
@@ -143,19 +170,23 @@ const startServer = async () => {
     await connectDatabase();
     console.log('[Startup] Authoritative MongoDB storage verified.');
 
-    // 2. Ensure specific admin user and verification queue items exist
+    // 2. Connect to Redis (non-blocking — application starts even if Redis is unavailable)
+    await redisService.connect();
+
+    // 3. Ensure specific admin user exists (idempotent — never overwrites existing)
     await ensureAdminAndKycData();
 
-    // 3. Start background Upstox IPO status synchronization scheduler
+    // 4. Start background Upstox IPO status synchronization scheduler
     upstoxIpoService.startScheduledSync();
 
-    // 4. Start HTTP & WebSocket server
+    // 5. Start HTTP & WebSocket server
     server.listen(config.port, () => {
       console.log(`====================================================`);
       console.log(`🚀 ${config.appName} Backend running on port ${config.port}`);
       console.log(`📡 Real-Time Socket.IO initialized`);
       console.log(`🔒 Security, Strict CORS Allowlist & Helmet activated`);
       console.log(`🍃 Database: MongoDB Atlas / Verified Primary Store`);
+      console.log(`⚡ Redis: ${redisService.isAvailable ? 'Connected — OTP/rate-limit state active' : 'Not connected — using in-process fallback'}`);
       console.log(`💼 Commission Engine: 0% to 50% in 2.5% steps active`);
       console.log(`====================================================`);
     });

@@ -48,7 +48,7 @@ export const RequestCard: React.FC<RequestCardProps> = ({
 
   // Proposed terms
   const rate = poke.proposedCommissionRate !== undefined ? poke.proposedCommissionRate : 5.0;
-  const basis = poke.commissionBasis || 'Documented Advisory Service Fee Base';
+  const basis = poke.commissionBasis || 'Commission on Listing Profit';
 
   const handleAcceptConfirm = async () => {
     if (!onAccept) return;
@@ -141,7 +141,7 @@ export const RequestCard: React.FC<RequestCardProps> = ({
       <View style={styles.termsBox}>
         <View style={styles.termsRow}>
           <Icon name="percent" size={14} color={colors.primaryActionBlue} />
-          <Text style={styles.termsLabel}>Proposed Commission:</Text>
+          <Text style={styles.termsLabel}>Proposed Commission on Profit:</Text>
           <Text style={styles.termsValue}>{rate.toFixed(1)}%</Text>
         </View>
         <Text style={styles.termsBasisText}>Basis: {basis}</Text>

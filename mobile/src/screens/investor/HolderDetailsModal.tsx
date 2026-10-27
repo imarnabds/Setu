@@ -109,13 +109,13 @@ export const HolderDetailsModal: React.FC<HolderDetailsModalProps> = ({
                   ? `${user.defaultCommissionRate.toFixed(1)}%`
                   : '5.0%'}
               </Text>
-              <Text style={styles.rateUnit}>Commission Rate</Text>
+              <Text style={styles.rateUnit}>Commission on Listing Profit</Text>
             </View>
             <Text style={styles.basisText}>
-              Calculation Basis: {user.commissionBasis || 'Documented Advisory & Technical Assistance Base Fee'}
+              Basis: {user.commissionBasis || 'Commission on Listing Profit'}
             </Text>
             <Text style={styles.termsNotice}>
-              Terms must be mutually agreed upon before any advisory interaction. No fees are charged on investment capital.
+              If you request this Demat holder to apply for an IPO on your behalf, this commission applies strictly to realized listing profits upon allotment.
             </Text>
           </View>
         </View>

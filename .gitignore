@@ -17,6 +17,10 @@ web-build/
 .env.*
 !.env.example
 *.env
+.env.local
+
+# Backend data files (JSON persistence — contains user data, never commit)
+backend/data/
 backend/backups/
 *.backup.json
 
@@ -31,3 +35,4 @@ yarn-error.log*
 Thumbs.db
 .vscode/
 .idea/
+

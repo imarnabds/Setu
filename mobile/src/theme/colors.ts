@@ -1,34 +1,34 @@
 // Centralized Design-Token System — Exact Reference Theme Palette
 export const colors = {
   // Core App Backgrounds
-  background: '#F4F7FC',          // Soft, cool-toned light grey/blue
-  backgroundSecondary: '#EBF0F9', // Secondary soft blue-grey
-  backgroundGradientTop: '#F8FAFC',
-  backgroundGradientBottom: '#EEF4FF',
+  background: '#F5F8FC',          // Light, cool-toned fintech background (#F5F8FC)
+  backgroundSecondary: '#EBF1F8', // Secondary soft blue-grey
+  backgroundGradientTop: '#F5F8FC',
+  backgroundGradientBottom: '#EEF4FE',
 
   // Surfaces
   surface: '#FFFFFF',             // Pure white cards & containers
-  surfaceSecondary: '#F8FAFC',    // Soft secondary panel surface
+  surfaceSecondary: '#F8FAFD',    // Soft secondary panel surface
   surfaceSubtle: '#F1F5F9',       // Cool subtle grey surface
-  surfaceHighlight: '#EBF2FF',    // Soft pale blue active surface
+  surfaceHighlight: '#EEF4FE',    // Soft pale blue active surface
   surfaceTranslucent: 'rgba(255, 255, 255, 0.95)',
   surfaceNav: 'rgba(255, 255, 255, 0.98)',
 
   // Primary & Action Colors (Vibrant Electric Blue from reference)
-  primaryBlue: '#246BFD',         // Electric blue button & accent
+  primaryBlue: '#246BFD',         // Electric blue button & accent (#246BFD)
   primaryActionBlue: '#246BFD',   // Backwards-compatible alias
   primaryActionHover: '#1A5CE5',
   secondaryBlue: '#60A5FA',       // Sky blue accent
-  deepNavy: '#0F172A',            // Deep slate headings & brand identity
-  primaryNavy: '#0F172A',         // Backwards-compatible alias
+  deepNavy: '#142B4D',            // Deep navy typography (#142B4D)
+  primaryNavy: '#142B4D',         // Backwards-compatible alias
 
   // Typography Colors
-  primaryText: '#0F172A',         // Slate-900 main text
+  primaryText: '#142B4D',         // Deep navy main text (#142B4D)
   secondaryText: '#64748B',       // Slate-500 supporting text
   mutedText: '#94A3B8',           // Slate-400 light labels & captions
 
   // Borders
-  border: '#E2E8F0',              // Thin, delicate border
+  border: '#E9F0FA',              // Thin, delicate border
   borderLight: '#F1F5F9',         // Subtle ultra-soft border for inner separators
   borderSubtle: 'rgba(226, 232, 240, 0.8)',
   borderFocus: '#246BFD',         // Active focus ring

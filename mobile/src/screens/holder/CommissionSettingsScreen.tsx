@@ -17,8 +17,8 @@ import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
 
 export const CommissionSettingsScreen: React.FC = () => {
-  const { user, updateUser } = useAuthStore();
-  const { addToast } = useUIStore();
+  const { user, updateUser, isGuestMode, isAuthenticated } = useAuthStore();
+  const { addToast, openGuestPromptModal } = useUIStore();
 
   const [history, setHistory] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -45,6 +45,10 @@ export const CommissionSettingsScreen: React.FC = () => {
   };
 
   const handleSaveCommission = async (rate: number, basis: string, reason?: string) => {
+    if (isGuestMode || !isAuthenticated) {
+      openGuestPromptModal('publish your profit commission rate');
+      return;
+    }
     try {
       const res = await api.put('/commission', {
         rate,
@@ -70,33 +74,47 @@ export const CommissionSettingsScreen: React.FC = () => {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
       {/* Screen Title & Introduction */}
       <View style={styles.header}>
-        <Text style={styles.title}>Commission Configuration Engine</Text>
+        <View style={styles.badgeRow}>
+          <View style={styles.headerBadge}>
+            <Icon name="percent" size={12} color="#246BFD" />
+            <Text style={styles.headerBadgeText}>DEMAT HOLDER SETTINGS</Text>
+          </View>
+        </View>
+        <Text style={styles.title}>Commission on Profit</Text>
         <Text style={styles.subtitle}>
-          Configure your published rate from 0% to 50% in exact 2.5% increments. All rates apply solely to documented advisory or technical assistance service bases.
+          Configure your published profit commission margin from 0% to 50% in 2.5% increments. When an investor requests you to apply on their behalf, this rate applies strictly to realized listing profit upon allotment.
         </Text>
       </View>
 
       {/* Main Commission Selector Engine */}
       <CommissionSelector
         initialRate={user?.defaultCommissionRate || 5.0}
-        initialBasis={user?.commissionBasis || 'Documented Advisory & Technical Assistance Base Fee'}
+        initialBasis={user?.commissionBasis || 'Commission on Listing Profit'}
         onSave={handleSaveCommission}
       />
 
       {/* Auditable Change History */}
       <View style={styles.historySection}>
         <View style={styles.historyHeader}>
-          <Icon name="sliders" size={16} color={colors.primaryNavy} />
-          <Text style={styles.historyTitle}>Auditable Rate Change History</Text>
+          <View style={styles.historyIconBox}>
+            <Icon name="sliders" size={15} color="#246BFD" />
+          </View>
+          <View style={styles.historyHeaderInfo}>
+            <Text style={styles.historyTitle}>Auditable Rate Change History</Text>
+            <Text style={styles.historySubtitle}>Timestamped log of published commission revisions</Text>
+          </View>
         </View>
 
         {history.length === 0 ? (
           <View style={styles.emptyHistory}>
-            <Text style={styles.emptyHistoryText}>No rate changes recorded yet.</Text>
+            <Icon name="clock" size={24} color="#94A3B8" />
+            <Text style={styles.emptyHistoryText}>No rate changes recorded yet</Text>
+            <Text style={styles.emptyHistorySubtext}>Your default published rate is 5.0%</Text>
           </View>
         ) : (
           history.map((entry) => {
@@ -113,13 +131,13 @@ export const CommissionSettingsScreen: React.FC = () => {
                 <View style={styles.historyRow}>
                   <View style={styles.rateChangeBadge}>
                     <Text style={styles.prevRate}>{entry.previousRate?.toFixed(1)}%</Text>
-                    <Icon name="arrow-right" size={12} color={colors.secondaryText} />
+                    <Icon name="arrow-right" size={12} color="#94A3B8" />
                     <Text style={styles.newRate}>{entry.newRate?.toFixed(1)}%</Text>
                   </View>
                   <Text style={styles.historyDate}>{formattedDate}</Text>
                 </View>
 
-                <Text style={styles.historyBasis}>Basis: {entry.basis}</Text>
+                <Text style={styles.historyBasis}>{entry.basis}</Text>
                 {entry.reason ? (
                   <Text style={styles.historyReason}>"{entry.reason}"</Text>
                 ) : null}
@@ -131,12 +149,41 @@ export const CommissionSettingsScreen: React.FC = () => {
 
       {/* Statutory Disclosures */}
       <View style={styles.statutoryBox}>
-        <Text style={styles.statutoryTitle}>Statutory & Compliance Rules:</Text>
-        <Text style={styles.statutoryBody}>
-          1. Rates can only be set in strict 2.5% increments (21 discrete steps between 0% and 50%).{'\n'}
-          2. Under SEBI guidelines, performance fees, allotment guarantees, or profit-sharing percentages on IPO capital are prohibited.{'\n'}
-          3. Rate revisions apply to future Poke requests and do not silently alter already accepted connection agreements without mutual consent.
-        </Text>
+        <View style={styles.statutoryHeaderRow}>
+          <View style={styles.statutoryIconBox}>
+            <Icon name="shield" size={15} color="#246BFD" />
+          </View>
+          <Text style={styles.statutoryTitle}>Statutory & Compliance Guidelines</Text>
+        </View>
+
+        <View style={styles.statutoryList}>
+          <View style={styles.statutoryItem}>
+            <View style={styles.statutoryBullet}>
+              <Text style={styles.statutoryBulletText}>1</Text>
+            </View>
+            <Text style={styles.statutoryItemText}>
+              <Text style={styles.statutoryItemStrong}>Strict 2.5% Increments:</Text> Rates step deterministically across 21 increments from 0.0% to 50.0% to ensure transparent, predictable quoting.
+            </Text>
+          </View>
+
+          <View style={styles.statutoryItem}>
+            <View style={styles.statutoryBullet}>
+              <Text style={styles.statutoryBulletText}>2</Text>
+            </View>
+            <Text style={styles.statutoryItemText}>
+              <Text style={styles.statutoryItemStrong}>Listing Profit Basis Only:</Text> Under SEBI guidelines, upfront consultation fees or allotment guarantees are prohibited. Zero profit or listing discount equals ₹0 commission.
+            </Text>
+          </View>
+
+          <View style={styles.statutoryItem}>
+            <View style={styles.statutoryBullet}>
+              <Text style={styles.statutoryBulletText}>3</Text>
+            </View>
+            <Text style={styles.statutoryItemText}>
+              <Text style={styles.statutoryItemStrong}>Non-Retroactive:</Text> Rate revisions apply only to subsequent connection requests and never alter already agreed allocations without explicit consent.
+            </Text>
+          </View>
+        </View>
       </View>
     </ScrollView>
   );
@@ -145,62 +192,110 @@ export const CommissionSettingsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: '#F5F8FC'
   },
   contentContainer: {
-    padding: spacing.md,
-    paddingBottom: 100
+    padding: 16,
+    paddingBottom: 110
   },
   header: {
-    marginBottom: spacing.md
+    marginBottom: 16
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    marginBottom: 8
+  },
+  headerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#EEF4FE',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8
+  },
+  headerBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#246BFD',
+    letterSpacing: 0.5
   },
   title: {
-    fontSize: typography.sizes.lg,
-    fontWeight: typography.weights.bold,
-    color: colors.primaryNavy,
-    letterSpacing: -0.2
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#142B4D',
+    letterSpacing: -0.4,
+    marginBottom: 4
   },
   subtitle: {
-    fontSize: typography.sizes.xs,
-    color: colors.secondaryText,
-    lineHeight: 18,
-    marginTop: 4
+    fontSize: 12.5,
+    color: '#64748B',
+    lineHeight: 18
   },
   historySection: {
-    marginTop: spacing.xl,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.cardLg,
-    padding: spacing.lg,
+    marginTop: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 18,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: '#E9F0FA',
     ...shadows.sm
   },
   historyHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.md
+    marginBottom: 14
+  },
+  historyIconBox: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: '#EEF4FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10
+  },
+  historyHeaderInfo: {
+    flex: 1
   },
   historyTitle: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.bold,
-    color: colors.primaryNavy,
-    marginLeft: 6
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#142B4D'
+  },
+  historySubtitle: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 1
   },
   emptyHistory: {
-    paddingVertical: spacing.md,
-    alignItems: 'center'
+    paddingVertical: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F8FAFD',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#EEF2F6',
+    borderStyle: 'dashed'
   },
   emptyHistoryText: {
-    fontSize: typography.sizes.xs,
-    color: colors.secondaryText
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#142B4D',
+    marginTop: 8
+  },
+  emptyHistorySubtext: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2
   },
   historyCard: {
-    backgroundColor: colors.surfaceSubtle,
-    borderRadius: borderRadius.card,
-    padding: spacing.md,
+    backgroundColor: '#F8FAFD',
+    borderRadius: 14,
+    padding: 12,
     borderWidth: 1,
-    borderColor: colors.borderLight,
-    marginBottom: spacing.sm
+    borderColor: '#E9F0FA',
+    marginBottom: 10
   },
   historyRow: {
     flexDirection: 'row',
@@ -214,48 +309,89 @@ const styles = StyleSheet.create({
     gap: 6
   },
   prevRate: {
-    fontSize: typography.sizes.sm,
-    color: colors.secondaryText,
-    fontWeight: typography.weights.semibold,
+    fontSize: 13,
+    color: '#94A3B8',
+    fontWeight: '600',
     textDecorationLine: 'line-through'
   },
   newRate: {
-    fontSize: typography.sizes.sm,
-    color: colors.primaryActionBlue,
-    fontWeight: typography.weights.bold
+    fontSize: 13.5,
+    color: '#246BFD',
+    fontWeight: '800'
   },
   historyDate: {
-    fontSize: 10,
-    color: colors.secondaryText
+    fontSize: 10.5,
+    color: '#94A3B8'
   },
   historyBasis: {
-    fontSize: 11,
-    color: colors.primaryNavy,
+    fontSize: 11.5,
+    fontWeight: '600',
+    color: '#142B4D',
     marginTop: 2
   },
   historyReason: {
     fontSize: 11,
-    color: colors.secondaryText,
+    color: '#64748B',
     fontStyle: 'italic',
     marginTop: 2
   },
   statutoryBox: {
-    backgroundColor: colors.subtleBlueBackground,
+    backgroundColor: '#EEF4FE',
     borderRadius: 20,
-    padding: spacing.md + 2,
+    padding: 18,
     borderWidth: 1,
-    borderColor: '#D4E4FC',
-    marginTop: spacing.lg
+    borderColor: '#D8E6FC',
+    marginTop: 16
+  },
+  statutoryHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12
+  },
+  statutoryIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 9
   },
   statutoryTitle: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
-    color: colors.primaryNavy,
-    marginBottom: 4
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#142B4D'
   },
-  statutoryBody: {
-    fontSize: 11,
-    color: colors.secondaryText,
-    lineHeight: 18
+  statutoryList: {
+    gap: 10
+  },
+  statutoryItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 9
+  },
+  statutoryBullet: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1
+  },
+  statutoryBulletText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#246BFD'
+  },
+  statutoryItemText: {
+    flex: 1,
+    fontSize: 11.5,
+    color: '#475569',
+    lineHeight: 17
+  },
+  statutoryItemStrong: {
+    fontWeight: '700',
+    color: '#142B4D'
   }
 });

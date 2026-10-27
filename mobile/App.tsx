@@ -50,11 +50,43 @@ import { ConnectionsListScreen } from './src/screens/chat/ConnectionsListScreen'
 import { ChatRoomScreen } from './src/screens/chat/ChatRoomScreen';
 import { NotificationsModal } from './src/screens/notifications/NotificationsModal';
 import { AdminConsoleScreen } from './src/screens/admin/AdminConsoleScreen';
+import { GuestRegistrationPromptModal } from './src/components/common/GuestRegistrationPromptModal';
+import { SocialAuthModal } from './src/components/auth/SocialAuthModal';
 
 const queryClient = new QueryClient();
 
+// Suppress default web browser focus outline rectangles on inputs
+if (Platform.OS === 'web' && typeof document !== 'undefined') {
+  const styleId = 'rn-web-suppress-focus-outline';
+  if (!document.getElementById(styleId)) {
+    const styleEl = document.createElement('style');
+    styleEl.id = styleId;
+    styleEl.textContent = `
+      input:focus, textarea:focus, select:focus, [contenteditable]:focus {
+        outline: none !important;
+        box-shadow: none !important;
+      }
+      input, textarea {
+        outline: none !important;
+      }
+    `;
+    document.head.appendChild(styleEl);
+  }
+}
+
 export default function App() {
-  const { user, isAuthenticated, isLoading, activeRole, checkAuth, logout, switchRole } = useAuthStore();
+  const {
+    user,
+    isAuthenticated,
+    isGuestMode,
+    isLoading,
+    activeRole,
+    checkAuth,
+    logout,
+    switchRole,
+    enterGuestMode,
+    exitGuestMode
+  } = useAuthStore();
   const {
     activeTab,
     setActiveTab,
@@ -62,10 +94,14 @@ export default function App() {
     closeChat,
     isNotificationsOpen,
     setNotificationsOpen,
-    unreadNotificationsCount
+    unreadNotificationsCount,
+    isGuestPromptModalOpen,
+    guestPromptAction,
+    closeGuestPromptModal
   } = useUIStore();
 
   const [authView, setAuthView] = useState<'welcome' | 'login' | 'signup'>('welcome');
+  const [guestSocialProvider, setGuestSocialProvider] = useState<'google' | 'apple' | null>(null);
   const [deviceFrameMode, setDeviceFrameMode] = useState(true);
   const [isResubmittingKyc, setIsResubmittingKyc] = useState(false);
 
@@ -106,6 +142,7 @@ export default function App() {
           <WelcomeScreen
             onGetStarted={() => setAuthView('signup')}
             onLogin={() => setAuthView('login')}
+            onExploreAsGuest={() => enterGuestMode('investor')}
           />
         );
     }
@@ -176,14 +213,14 @@ export default function App() {
       <StatusBar style="dark" />
       <ToastNotificationContainer />
 
-      {!isAuthenticated ? (
+      {!isAuthenticated && !isGuestMode ? (
         renderAuthContent()
-      ) : activeRole !== 'admin' && !user?.isEmailVerified ? (
+      ) : activeRole !== 'admin' && isAuthenticated && !user?.isEmailVerified ? (
         <EmailOtpVerificationScreen
           onVerified={() => checkAuth()}
           onLogout={logout}
         />
-      ) : activeRole !== 'admin' && !user?.isKycVerified ? (
+      ) : activeRole !== 'admin' && isAuthenticated && !user?.isKycVerified ? (
         user?.kycDetails?.status === 'pending' ||
         (user?.kycDetails?.status === 'rejected' && !isResubmittingKyc) ? (
           <KycPendingReviewScreen
@@ -206,8 +243,8 @@ export default function App() {
         )
       ) : (
         <View style={styles.mainContainer}>
-          {/* Top Header unless inside active full-screen chat */}
-          {!activeChatConnectionId && (
+          {/* Top Header unless inside active full-screen chat or Holder Home where it is integrated */}
+          {!activeChatConnectionId && !(activeRole === 'demat_holder' && activeTab === 'home') && (
             <>
               <TopHeader />
               <IpoDropdownBar />
@@ -233,6 +270,30 @@ export default function App() {
           />
         </View>
       )}
+
+      {/* Guest Mode Restriction & Registration Modal */}
+      <GuestRegistrationPromptModal
+        visible={isGuestPromptModalOpen}
+        actionName={guestPromptAction}
+        onClose={closeGuestPromptModal}
+        onSelectSocial={(provider) => {
+          closeGuestPromptModal();
+          setGuestSocialProvider(provider);
+        }}
+        onSelectStandardSignup={() => {
+          closeGuestPromptModal();
+          exitGuestMode();
+          setAuthView('signup');
+        }}
+      />
+
+      {/* Social Auth Modal triggered from Guest Mode */}
+      <SocialAuthModal
+        visible={!!guestSocialProvider}
+        provider={guestSocialProvider}
+        onClose={() => setGuestSocialProvider(null)}
+        defaultRole={activeRole === 'demat_holder' ? 'demat_holder' : 'investor'}
+      />
     </SafeAreaView>
   );
 
