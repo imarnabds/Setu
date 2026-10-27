@@ -3,6 +3,18 @@ import { config } from '../config/index.js';
 
 export const VALID_COMMISSION_RATES = config.validCommissionRates;
 
+export const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
+
+export const upiSchema = z
+  .string()
+  .trim()
+  .min(3, 'UPI ID must be at least 3 characters')
+  .regex(upiRegex, 'Invalid UPI ID format. Expected format: username@bank');
+
+export const upiUpdateSchema = z.object({
+  upiId: upiSchema
+});
+
 export const signupSchema = z.object({
   fullName: z.string().min(2, 'Full name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
@@ -12,6 +24,11 @@ export const signupSchema = z.object({
     .min(6, 'Password must be at least 6 characters')
     .max(100, 'Password is too long'),
   primaryRole: z.enum(['investor', 'demat_holder']),
+  upiId: z
+    .string()
+    .trim()
+    .regex(upiRegex, 'Invalid UPI ID format. Expected format: username@bank')
+    .optional(),
   termsAccepted: z.literal(true, {
     errorMap: () => ({ message: 'You must accept the Terms of Service' })
   }),
@@ -41,7 +58,12 @@ export const profileUpdateSchema = z.object({
     .optional(),
   commissionBasis: z.string().max(200).optional(),
   isAvailable: z.boolean().optional(),
-  avatarUrl: z.string().optional()
+  avatarUrl: z.string().optional(),
+  upiId: z
+    .string()
+    .trim()
+    .regex(upiRegex, 'Invalid UPI ID format. Expected format: username@bank')
+    .optional()
 });
 
 export const commissionUpdateSchema = z.object({

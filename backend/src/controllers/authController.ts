@@ -71,7 +71,7 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const { fullName, email, mobileNumber, password, primaryRole } = parseResult.data;
+    const { fullName, email, mobileNumber, password, primaryRole, upiId } = parseResult.data;
 
     // Check duplicate email
     const existingEmail = await dbService.findUserByEmail(email);
@@ -106,6 +106,9 @@ export const signup = async (req: Request, res: Response): Promise<void> => {
       isEmailVerified: false,
       isMobileVerified: true,
       isKycVerified: false,
+      ...(primaryRole === 'demat_holder' && upiId
+        ? { upiId: upiId.trim(), isUpiVerified: false }
+        : {}),
       kycDetails: {
         documentType: 'Aadhaar + PAN Verification',
         documentNumberMasked: 'XXXX' + mobileNumber.slice(-4),

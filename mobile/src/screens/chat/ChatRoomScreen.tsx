@@ -39,13 +39,33 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({
   const [menuOpen, setMenuOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
+  // UPI Details State
+  const [upiDetails, setUpiDetails] = useState<{
+    upiId: string | null;
+    isUpiVerified: boolean;
+    hasUpi: boolean;
+  } | null>(null);
+  const [showUpiCard, setShowUpiCard] = useState(true);
+
   const scrollRef = useRef<any>(null);
+
+  const handleCopyUpi = (textToCopy: string) => {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(textToCopy);
+      }
+      addToast('UPI ID copied to clipboard!', 'success');
+    } catch {
+      addToast('Copied to clipboard', 'info');
+    }
+  };
 
   const fetchConnectionAndMessages = async () => {
     try {
-      const [connRes, msgRes] = await Promise.all([
+      const [connRes, msgRes, upiRes] = await Promise.all([
         api.get(`/connections/${connectionId}`).catch(() => null),
-        api.get(`/chat/${connectionId}`).catch(() => null)
+        api.get(`/chat/${connectionId}`).catch(() => null),
+        api.get(`/connections/${connectionId}/upi`).catch(() => null)
       ]);
 
       if (connRes?.data?.data) {
@@ -53,6 +73,11 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({
       }
       if (msgRes?.data?.data) {
         setMessages(msgRes.data.data);
+      }
+      if (upiRes?.data?.data) {
+        setUpiDetails(upiRes.data.data);
+      } else if (connRes?.data?.data?.dematHolderUpi) {
+        setUpiDetails(connRes.data.data.dematHolderUpi);
       }
     } catch (err) {
       console.error('Failed to load chat data:', err);
@@ -240,6 +265,94 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({
         </View>
       </View>
 
+      {/* Verified UPI Details Card (Authorized Connection Details) */}
+      <View style={styles.upiDetailsCard}>
+        <View style={styles.upiCardHeader}>
+          <View style={styles.upiCardHeaderLeft}>
+            <View style={styles.upiIconBox}>
+              <Icon name="credit-card" size={15} color={colors.primaryBlue} />
+            </View>
+            <View>
+              <Text style={styles.upiCardSectionTitle}>Verified UPI Details</Text>
+              <Text style={styles.upiCardSubtitle}>
+                Demat Account Holder: {partner.fullName || 'Holder'}
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            onPress={() => setShowUpiCard(!showUpiCard)}
+            style={styles.collapseToggle}
+            activeOpacity={0.7}
+          >
+            <Icon
+              name={showUpiCard ? 'chevron-up' : 'chevron-down'}
+              size={18}
+              color={colors.secondaryText}
+            />
+          </TouchableOpacity>
+        </View>
+
+        {showUpiCard && (
+          <View style={styles.upiCardBody}>
+            {upiDetails?.hasUpi && upiDetails.upiId ? (
+              <>
+                <View style={styles.upiFieldRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.upiFieldLabel}>Active UPI ID</Text>
+                    <Text style={styles.upiFieldText} selectable>{upiDetails.upiId}</Text>
+                  </View>
+
+                  <View style={styles.upiBadgeAndActionRow}>
+                    {upiDetails.isUpiVerified ? (
+                      <View style={styles.upiVerifiedBadge}>
+                        <Icon name="check" size={10} color="#FFFFFF" strokeWidth={3} />
+                        <Text style={styles.upiVerifiedBadgeText}>Verified</Text>
+                      </View>
+                    ) : (
+                      <View style={styles.upiPendingBadge}>
+                        <Icon name="clock" size={10} color="#D97706" />
+                        <Text style={styles.upiPendingBadgeText}>Pending Verification</Text>
+                      </View>
+                    )}
+
+                    <TouchableOpacity
+                      style={styles.copyBtn}
+                      onPress={() => handleCopyUpi(upiDetails.upiId!)}
+                      activeOpacity={0.8}
+                    >
+                      <Icon name="copy" size={13} color={colors.primaryBlue} />
+                      <Text style={styles.copyBtnText}>Copy</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <Text style={styles.upiExplanationText}>
+                  This UPI ID belongs to the connected Demat Account Holder ({partner.fullName || 'Holder'}).
+                </Text>
+              </>
+            ) : (
+              <View style={styles.upiEmptyStateRow}>
+                <Icon name="info" size={16} color={colors.warning} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.upiEmptyTitle}>UPI ID Pending Configuration</Text>
+                  <Text style={styles.upiEmptyText}>
+                    The connected Demat Account Holder has not supplied an active UPI ID yet. They can configure it in their profile settings.
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            <View style={styles.complianceNoticeMini}>
+              <Icon name="shield" size={11} color={colors.secondaryText} />
+              <Text style={styles.complianceNoticeMiniText}>
+                Compliance Reminder: All IPO applications must use authorized channels (ASBA/UPI/Broker). Never share trading credentials, bank OTPs, or UPI PINs.
+              </Text>
+            </View>
+          </View>
+        )}
+      </View>
+
       {/* Messages Stream */}
       <ScrollView
         ref={scrollRef}
@@ -298,6 +411,17 @@ export const ChatRoomScreen: React.FC<ChatRoomScreenProps> = ({
             <Text style={styles.modalDesc}>
               Manage this authorized IPO assistance connection:
             </Text>
+
+            <TouchableOpacity
+              style={styles.menuOption}
+              onPress={() => {
+                setShowUpiCard(true);
+                setMenuOpen(false);
+              }}
+            >
+              <Icon name="credit-card" size={18} color={colors.primaryBlue} />
+              <Text style={styles.menuOptionText}>View Demat Holder UPI Details</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.menuOption}
@@ -578,5 +702,176 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.secondaryText,
     fontWeight: typography.weights.semibold
+  },
+
+  // Verified UPI Details Card Styles
+  upiDetailsCard: {
+    marginHorizontal: spacing.md,
+    marginTop: spacing.xs,
+    marginBottom: spacing.xs,
+    backgroundColor: '#F8FAFC',
+    borderRadius: borderRadius.card,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
+    ...shadows.sm
+  },
+  upiCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: '#F1F5F9',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0'
+  },
+  upiCardHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    flex: 1
+  },
+  upiIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#E0E7FF',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  upiCardSectionTitle: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    color: colors.primaryNavy,
+    letterSpacing: -0.2
+  },
+  upiCardSubtitle: {
+    fontSize: 10.5,
+    color: colors.secondaryText
+  },
+  collapseToggle: {
+    padding: 4
+  },
+  upiCardBody: {
+    padding: spacing.md,
+    backgroundColor: '#FFFFFF'
+  },
+  upiFieldRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC',
+    borderRadius: borderRadius.card,
+    padding: spacing.sm + 2,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    gap: spacing.sm
+  },
+  upiFieldLabel: {
+    fontSize: 10,
+    fontWeight: typography.weights.bold,
+    color: colors.secondaryText,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5
+  },
+  upiFieldText: {
+    fontSize: typography.sizes.sm,
+    fontWeight: typography.weights.bold,
+    color: colors.primaryNavy,
+    marginTop: 1
+  },
+  upiBadgeAndActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6
+  },
+  upiVerifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.success,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: borderRadius.full,
+    gap: 3
+  },
+  upiVerifiedBadgeText: {
+    fontSize: 9.5,
+    fontWeight: typography.weights.bold,
+    color: '#FFFFFF'
+  },
+  upiPendingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: borderRadius.full,
+    gap: 3,
+    borderWidth: 1,
+    borderColor: '#FDE68A'
+  },
+  upiPendingBadgeText: {
+    fontSize: 9.5,
+    fontWeight: typography.weights.bold,
+    color: '#B45309'
+  },
+  copyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#EBF2FF',
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 5,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: '#BFDBFE'
+  },
+  copyBtnText: {
+    fontSize: 11,
+    fontWeight: typography.weights.bold,
+    color: colors.primaryBlue
+  },
+  upiExplanationText: {
+    fontSize: 11,
+    color: colors.secondaryText,
+    marginTop: spacing.xs + 2,
+    lineHeight: 15
+  },
+  upiEmptyStateRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    backgroundColor: '#FFFBEB',
+    borderRadius: borderRadius.card,
+    padding: spacing.sm + 2,
+    borderWidth: 1,
+    borderColor: '#FDE68A'
+  },
+  upiEmptyTitle: {
+    fontSize: 12,
+    fontWeight: typography.weights.bold,
+    color: '#92400E'
+  },
+  upiEmptyText: {
+    fontSize: 11,
+    color: '#B45309',
+    marginTop: 2,
+    lineHeight: 15
+  },
+  complianceNoticeMini: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 4,
+    marginTop: spacing.sm,
+    paddingTop: spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9'
+  },
+  complianceNoticeMiniText: {
+    flex: 1,
+    fontSize: 10,
+    color: colors.secondaryText,
+    lineHeight: 14
   }
 });

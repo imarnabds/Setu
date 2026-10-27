@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { dbService } from '../services/dbService.js';
 import { AuthenticatedRequest } from '../middleware/auth.js';
-import { profileUpdateSchema, kycSubmitSchema } from '../validators/schemas.js';
+import { profileUpdateSchema, kycSubmitSchema, upiUpdateSchema } from '../validators/schemas.js';
 import { User } from '../models/types.js';
 
 // Explicit public profile DTO allowlist that guarantees zero exposure of email, phone, or KYC documents
@@ -185,10 +185,27 @@ export const updateProfile = async (
       return;
     }
 
-    const updated = await dbService.updateUser(req.user.id, parseResult.data);
+    const updates = { ...parseResult.data };
+    if (updates.upiId !== undefined) {
+      // Whenever UPI ID is updated, reset isUpiVerified to false until re-verified
+      (updates as any).isUpiVerified = false;
+    }
+
+    const updated = await dbService.updateUser(req.user.id, updates);
     if (!updated) {
       res.status(404).json({ success: false, error: 'User not found' });
       return;
+    }
+
+    if (updates.upiId !== undefined) {
+      await dbService.createAuditLog({
+        id: 'aud_' + Date.now().toString(36),
+        actorId: req.user.id,
+        action: 'UPI_UPDATED',
+        details: { userId: req.user.id, source: 'profile_update' },
+        ipAddress: req.ip,
+        timestamp: new Date().toISOString()
+      });
     }
 
     // Return own profile with password stripped
@@ -200,6 +217,65 @@ export const updateProfile = async (
     });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to update profile' });
+  }
+};
+
+export const updateUpi = async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, error: 'Unauthorized' });
+      return;
+    }
+
+    const parseResult = upiUpdateSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: parseResult.error.flatten().fieldErrors
+      });
+      return;
+    }
+
+    const { upiId } = parseResult.data;
+    const trimmedUpi = upiId.trim();
+
+    const updated = await dbService.updateUser(req.user.id, {
+      upiId: trimmedUpi,
+      isUpiVerified: false
+    });
+
+    if (!updated) {
+      res.status(404).json({ success: false, error: 'User not found' });
+      return;
+    }
+
+    await dbService.createAuditLog({
+      id: 'aud_' + Date.now().toString(36),
+      actorId: req.user.id,
+      action: 'UPI_UPDATED',
+      details: {
+        userId: req.user.id,
+        source: 'direct_upi_update',
+        isVerified: false
+      },
+      ipAddress: req.ip,
+      timestamp: new Date().toISOString()
+    });
+
+    res.json({
+      success: true,
+      message: 'Active UPI ID saved successfully',
+      data: {
+        upiId: updated.upiId,
+        isUpiVerified: updated.isUpiVerified || false
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to update UPI ID' });
   }
 };
 

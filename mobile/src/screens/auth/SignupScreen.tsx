@@ -27,8 +27,8 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({
   onNavigateToLogin,
   onBack
 }) => {
-  // Step 1: Form details (Screen 2), Step 2: Role selection (Screen 3)
-  const [step, setStep] = useState<1 | 2>(1);
+  // Step 1: Form details, Step 2: Role selection, Step 3: Demat Account & UPI Details
+  const [step, setStep] = useState<1 | 2 | 3>(1);
 
   // Form State
   const [fullName, setFullName] = useState('');
@@ -36,6 +36,10 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({
   const [mobileNumber, setMobileNumber] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // UPI State (for Demat Account Holder registration)
+  const [upiId, setUpiId] = useState('');
+  const [upiError, setUpiError] = useState<string | null>(null);
 
   // Role State
   const [selectedRole, setSelectedRole] = useState<'investor' | 'demat_holder' | null>(null);
@@ -71,13 +75,13 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({
     setStep(2);
   };
 
-  const handleFinalSignup = async (role: 'investor' | 'demat_holder') => {
+  const handleFinalSignup = async (role: 'investor' | 'demat_holder', holderUpiId?: string) => {
     setSelectedRole(role);
     setLoading(true);
     setErrorMessage(null);
 
     try {
-      const res = await api.post('/auth/signup', {
+      const payload: any = {
         fullName: fullName.trim(),
         email: email.trim().toLowerCase(),
         mobileNumber: mobileNumber.trim(),
@@ -85,7 +89,13 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({
         primaryRole: role,
         termsAccepted: true,
         privacyAccepted: true
-      });
+      };
+
+      if (role === 'demat_holder' && holderUpiId) {
+        payload.upiId = holderUpiId.trim();
+      }
+
+      const res = await api.post('/auth/signup', payload);
 
       if (res.data.success) {
         const { user, accessToken, refreshToken } = res.data.data;
@@ -96,10 +106,27 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({
       const msg = err.response?.data?.error || 'Account creation failed. Please check your credentials.';
       setErrorMessage(msg);
       // If error is related to existing email/phone, jump back to step 1
-      setStep(1);
+      if (msg.toLowerCase().includes('email') || msg.toLowerCase().includes('mobile')) {
+        setStep(1);
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDematHolderSubmit = () => {
+    const trimmed = upiId.trim();
+    if (!trimmed) {
+      setUpiError('Active UPI ID is required for Demat Account Holders.');
+      return;
+    }
+    const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
+    if (!upiRegex.test(trimmed)) {
+      setUpiError('Please enter a valid UPI ID in username@bank format (e.g. yourname@bank).');
+      return;
+    }
+    setUpiError(null);
+    handleFinalSignup('demat_holder', trimmed);
   };
 
   // -------------------------------------------------------------
@@ -183,7 +210,11 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({
             ]}
             activeOpacity={0.85}
             disabled={loading}
-            onPress={() => handleFinalSignup('demat_holder')}
+            onPress={() => {
+              setSelectedRole('demat_holder');
+              setErrorMessage(null);
+              setStep(3);
+            }}
           >
             <View style={styles.roleAvatarWrapper}>
               <Image
@@ -204,11 +235,7 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({
             </View>
 
             <View style={styles.roleArrowCircle}>
-              {loading && selectedRole === 'demat_holder' ? (
-                <ActivityIndicator size="small" color={colors.primaryBlue} />
-              ) : (
-                <Icon name="chevron-right" size={20} color={colors.primaryBlue} strokeWidth={2.5} />
-              )}
+              <Icon name="chevron-right" size={20} color={colors.primaryBlue} strokeWidth={2.5} />
             </View>
           </TouchableOpacity>
         </View>
@@ -221,6 +248,130 @@ export const SignupScreen: React.FC<SignupScreenProps> = ({
             resizeMode="contain"
           />
         </View>
+      </ScrollView>
+    );
+  }
+
+  // -------------------------------------------------------------
+  // SCREEN 4 / STEP 3: DEMAT ACCOUNT & UPI DETAILS
+  // -------------------------------------------------------------
+  if (step === 3) {
+    return (
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Top Back Nav (returns to Step 2 preserving all credentials) */}
+        <TouchableOpacity
+          onPress={() => {
+            setErrorMessage(null);
+            setStep(2);
+          }}
+          style={styles.backButton}
+          activeOpacity={0.7}
+        >
+          <Icon name="chevron-left" size={24} color={colors.deepNavy} />
+        </TouchableOpacity>
+
+        {/* Step Indicator & Header */}
+        <View style={styles.headerRow}>
+          <View style={styles.headerTextCol}>
+            <View style={styles.stepBadge}>
+              <Text style={styles.stepBadgeText}>STEP 3 OF 3 • DEMAT REGISTRATION</Text>
+            </View>
+            <Text style={styles.screenTitle}>Demat Account Details</Text>
+            <Text style={styles.screenSubtitle}>
+              Provide your active payout details to receive listing profit commissions.
+            </Text>
+          </View>
+        </View>
+
+        {(errorMessage || upiError) && (
+          <View style={styles.errorBox}>
+            <Icon name="alert-circle" size={16} color={colors.error} />
+            <Text style={styles.errorText}>{upiError || errorMessage}</Text>
+          </View>
+        )}
+
+        {/* UPI Details Section */}
+        <View style={styles.upiSectionCard}>
+          <View style={styles.upiSectionHeader}>
+            <View style={styles.upiIconCircle}>
+              <Icon name="credit-card" size={18} color={colors.primaryBlue} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.upiSectionTitle}>UPI Details</Text>
+              <Text style={styles.upiSectionDesc}>
+                Payouts from agreed investor partnerships are settled directly via UPI.
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>
+              Active UPI ID <Text style={{ color: colors.error }}>*</Text>
+            </Text>
+            <View style={[styles.inputContainer, upiError ? styles.inputContainerError : null]}>
+              <View style={styles.inputIconBox}>
+                <Icon name="at-sign" size={18} color={colors.secondaryText} />
+              </View>
+              <TextInput
+                style={styles.input}
+                placeholder="yourname@bank"
+                placeholderTextColor={colors.mutedText}
+                value={upiId}
+                onChangeText={(text) => {
+                  setUpiId(text);
+                  setUpiError(null);
+                  setErrorMessage(null);
+                }}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="email-address"
+              />
+            </View>
+            <Text style={styles.helperText}>
+              Enter the UPI ID associated with your own bank account.
+            </Text>
+          </View>
+
+          {/* Compliance & Regulatory Notice */}
+          <View style={styles.complianceNoteCard}>
+            <Icon name="shield" size={15} color={colors.primaryBlue} />
+            <Text style={styles.complianceNoteText}>
+              <Text style={{ fontWeight: typography.weights.bold }}>SEBI & NPCI Notice: </Text>
+              The UPI ID must be linked to the bank account registered under your own name and PAN. Third-party applications or unsupported fund transfers are strictly prohibited.
+            </Text>
+          </View>
+        </View>
+
+        {/* Complete Registration Action */}
+        <TouchableOpacity
+          style={styles.createAccountBtn}
+          activeOpacity={0.85}
+          disabled={loading}
+          onPress={handleDematHolderSubmit}
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <>
+              <Text style={styles.createAccountText}>Complete Demat Registration</Text>
+              <Icon name="arrow-right" size={18} color="#FFFFFF" strokeWidth={2.5} />
+            </>
+          )}
+        </TouchableOpacity>
+
+        {/* Change Role back to Investor */}
+        <TouchableOpacity
+          style={styles.backToRoleBtn}
+          onPress={() => setStep(2)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.backToRoleText}>← Change Role to Individual Investor</Text>
+        </TouchableOpacity>
       </ScrollView>
     );
   }
@@ -656,5 +807,89 @@ const styles = StyleSheet.create({
   roleBottomGraphic: {
     width: '100%',
     height: 120
+  },
+
+  // Step 3 Demat & UPI Styles
+  stepBadge: {
+    backgroundColor: '#EBF2FF',
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
+    alignSelf: 'flex-start',
+    marginBottom: spacing.xs
+  },
+  stepBadgeText: {
+    fontSize: 10,
+    fontWeight: typography.weights.bold,
+    color: colors.primaryBlue,
+    letterSpacing: 0.5
+  },
+  upiSectionCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.cardLg,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    marginBottom: spacing.lg,
+    ...shadows.sm
+  },
+  upiSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.md,
+    marginBottom: spacing.md
+  },
+  upiIconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#EBF2FF',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  upiSectionTitle: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.deepNavy
+  },
+  upiSectionDesc: {
+    fontSize: 12,
+    color: colors.secondaryText,
+    marginTop: 2,
+    lineHeight: 16
+  },
+  inputContainerError: {
+    borderColor: colors.error
+  },
+  helperText: {
+    fontSize: 11,
+    color: colors.secondaryText,
+    marginTop: 4
+  },
+  complianceNoteCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    backgroundColor: '#F8FAFC',
+    borderRadius: borderRadius.card,
+    padding: spacing.md,
+    marginTop: spacing.md,
+    borderWidth: 1,
+    borderColor: '#E2E8F0'
+  },
+  complianceNoteText: {
+    flex: 1,
+    fontSize: 11,
+    color: colors.secondaryText,
+    lineHeight: 15
+  },
+  backToRoleBtn: {
+    alignItems: 'center',
+    paddingVertical: spacing.sm
+  },
+  backToRoleText: {
+    fontSize: typography.sizes.xs,
+    color: colors.primaryBlue,
+    fontWeight: typography.weights.semibold
   }
 });

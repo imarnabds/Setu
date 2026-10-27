@@ -13,7 +13,10 @@ const router = Router();
 router.post('/', authenticate, sendPoke);
 router.get('/', authenticate, getMyPokes);
 router.put('/:id/cancel', authenticate, cancelPoke);
+router.post('/:id/cancel', authenticate, cancelPoke);
 router.put('/:id/accept', authenticate, acceptPoke);
+router.post('/:id/accept', authenticate, acceptPoke);
 router.put('/:id/reject', authenticate, rejectPoke);
+router.post('/:id/reject', authenticate, rejectPoke);
 
 export default router;

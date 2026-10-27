@@ -37,6 +37,9 @@ export interface User {
   defaultCommissionRate: number;
   commissionBasis: string;
   isAvailable: boolean;
+  upiId?: string;
+  isUpiVerified?: boolean;
+  upiVerifiedAt?: string;
   createdAt: string;
 }
 

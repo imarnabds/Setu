@@ -84,6 +84,9 @@ const UserSchema = new Schema(
       default: 'Commission on Listing Profit'
     },
     isAvailable: { type: Boolean, default: true },
+    upiId: { type: String, trim: true },
+    isUpiVerified: { type: Boolean, default: false },
+    upiVerifiedAt: String,
     refreshToken: String,
     createdAt: { type: String, required: true },
     updatedAt: { type: String, required: true }

@@ -42,6 +42,9 @@ export interface User {
   defaultCommissionRate: number; // 0 to 50 in 2.5% increments
   commissionBasis: string;
   isAvailable: boolean;
+  upiId?: string;
+  isUpiVerified?: boolean;
+  upiVerifiedAt?: string;
   refreshToken?: string;
   createdAt: string;
   updatedAt: string;
@@ -110,6 +113,12 @@ export interface Connection {
   agreedCommissionBasis: string;
   status: ConnectionStatus;
   blockedById?: string;
+  dematHolderUpi?: {
+    upiId: string | null;
+    isUpiVerified: boolean;
+    hasUpi: boolean;
+    upiVerifiedAt?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
